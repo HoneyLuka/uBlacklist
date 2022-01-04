@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkublacklist_website=self.webpackChunkublacklist_website||[]).push([[237],{5223:function(e,t,l){l.r(t);var s=l(7378),u=l(5331);t.default=function(){return s.createElement(u.l_,{to:"/ublacklist/docs"})}}}]);
