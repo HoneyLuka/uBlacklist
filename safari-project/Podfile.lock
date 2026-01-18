@@ -1,22 +1,16 @@
 PODS:
   - RevenueCat (5.44.1)
-  - SVProgressHUD (2.3.1):
-    - SVProgressHUD/Core (= 2.3.1)
-  - SVProgressHUD/Core (2.3.1)
 
 DEPENDENCIES:
   - RevenueCat
-  - SVProgressHUD
 
 SPEC REPOS:
   trunk:
     - RevenueCat
-    - SVProgressHUD
 
 SPEC CHECKSUMS:
   RevenueCat: c63342889404269918c1196708246d7c21cf8e6d
-  SVProgressHUD: 4837c74bdfe2e51e8821c397825996a8d7de6e22
 
-PODFILE CHECKSUM: a6c50415c40f7a5100acf9967b55d15abd20528f
+PODFILE CHECKSUM: 2c8c725f5371559a1e0554abc94ee06f55f06717
 
 COCOAPODS: 1.16.2

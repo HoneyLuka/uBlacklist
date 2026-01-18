@@ -4,7 +4,6 @@ target 'uBlacklist for Safari (iOS)' do
 
   # Pods for uBlacklist for Safari (iOS)
   pod 'RevenueCat'
-  pod 'SVProgressHUD'
 end
 
 target 'uBlacklist for Safari (macOS)' do
