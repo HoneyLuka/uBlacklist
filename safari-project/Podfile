@@ -3,7 +3,6 @@ target 'uBlacklist for Safari (iOS)' do
   use_frameworks!
 
   # Pods for uBlacklist for Safari (iOS)
-  pod 'RevenueCat'
 end
 
 target 'uBlacklist for Safari (macOS)' do

@@ -10,6 +10,7 @@
 		617B4E902F1C9A760049206A /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 617B4E8F2F1C9A760049206A /* SnapKit */; };
 		617B4E922F1C9A800049206A /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 617B4E912F1C9A800049206A /* SnapKit */; };
 		617B4E952F1C9BB10049206A /* SVProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 617B4E942F1C9BB10049206A /* SVProgressHUD */; };
+		617B52542F1CA3D3005492AC /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 617B52532F1CA3D3005492AC /* RevenueCat */; };
 		6A323BB97C87FED7657B9E9C /* Pods_uBlacklist_for_Safari__macOS_.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F935002044BD70848B5D5DE4 /* Pods_uBlacklist_for_Safari__macOS_.framework */; };
 		6A6A3D0926F35275000B99BE /* grant-permission-guide.gif in Resources */ = {isa = PBXBuildFile; fileRef = 6A6A3CF026F35275000B99BE /* grant-permission-guide.gif */; };
 		6A6A3D0A26F35275000B99BE /* other-licence.html in Resources */ = {isa = PBXBuildFile; fileRef = 6A6A3CF226F35275000B99BE /* other-licence.html */; };
@@ -220,6 +221,7 @@
 			files = (
 				617B4E952F1C9BB10049206A /* SVProgressHUD in Frameworks */,
 				617B4E902F1C9A760049206A /* SnapKit in Frameworks */,
+				617B52542F1CA3D3005492AC /* RevenueCat in Frameworks */,
 				E1F45B853590D2A26481E422 /* Pods_uBlacklist_for_Safari__iOS_.framework in Frameworks */,
 				A24FD1EA2CDF38CA00D2BDB6 /* StoreKit.framework in Frameworks */,
 			);
@@ -574,7 +576,6 @@
 				6AA45ABF26F34B4300D6629A /* Frameworks */,
 				6AA45AC026F34B4300D6629A /* Resources */,
 				6AA45B0526F34B4300D6629A /* Embed App Extensions */,
-				E08E61DC9A572A5754690C31 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -681,6 +682,7 @@
 			packageReferences = (
 				617B4E8E2F1C9A760049206A /* XCRemoteSwiftPackageReference "SnapKit" */,
 				617B4E932F1C9BB10049206A /* XCRemoteSwiftPackageReference "SVProgressHUD" */,
+				617B52522F1CA3D3005492AC /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 			);
 			productRefGroup = 6AA45AC326F34B4300D6629A /* Products */;
 			projectDirPath = "";
@@ -850,23 +852,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		E08E61DC9A572A5754690C31 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS)-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS)-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS)-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1454,6 +1439,14 @@
 				minimumVersion = 2.3.1;
 			};
 		};
+		617B52522F1CA3D3005492AC /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.44.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1471,6 +1464,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 617B4E932F1C9BB10049206A /* XCRemoteSwiftPackageReference "SVProgressHUD" */;
 			productName = SVProgressHUD;
+		};
+		617B52532F1CA3D3005492AC /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 617B52522F1CA3D3005492AC /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
