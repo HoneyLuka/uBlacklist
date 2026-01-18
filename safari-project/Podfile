@@ -3,7 +3,6 @@ target 'uBlacklist for Safari (iOS)' do
   use_frameworks!
 
   # Pods for uBlacklist for Safari (iOS)
-  pod 'SnapKit', '~> 5.0.0'
   pod 'RevenueCat'
   pod 'SVProgressHUD'
 end
@@ -13,7 +12,6 @@ target 'uBlacklist for Safari (macOS)' do
   use_frameworks!
 
   # Pods for uBlacklist for Safari (macOS)
-  pod 'SnapKit', '~> 5.0.0'
 end
 
 target 'uBlacklist for Safari Extension (iOS)' do
