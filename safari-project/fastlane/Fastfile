@@ -14,10 +14,6 @@
 # update_fastlane
 
 platform :ios do
-  before_all do
-    cocoapods
-  end
-
   lane :release do
     build_ios_app(
       workspace: "uBlacklist for Safari.xcworkspace",
@@ -38,10 +34,6 @@ platform :ios do
 end
 
 platform :mac do
-  before_all do
-    cocoapods
-  end
-
   lane :release do
     build_mac_app(
       workspace: "uBlacklist for Safari.xcworkspace",

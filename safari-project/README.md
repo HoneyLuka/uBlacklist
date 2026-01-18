@@ -26,14 +26,10 @@ pnpm install
 pnpm build -b safari
 ```
 
-### 3. Build uBlacklist for Safari project
-
-To build this project, [Cocoapods](https://cocoapods.org) is required.
+### 3. Open uBlacklist for Safari project
 
 ```
 cd safari-project
-
-pod install
 ```
 
 ### 4. Change project version (Optional)
