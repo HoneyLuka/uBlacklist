@@ -1,6 +1,12 @@
 name: Crowdin
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - src/_locales/en/messages.json
+      - README.md
   workflow_dispatch: {}
 
 permissions: {}
@@ -13,20 +19,30 @@ jobs:
   crowdin:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          token: ${{ secrets.PULL_REQUEST_TOKEN }}
+          persist-credentials: false
+
+      - name: Generate token for pull request
+        id: generate-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ vars.PULL_REQUESTS_APP_ID }}
+          private-key: ${{ secrets.PULL_REQUESTS_PRIVATE_KEY }}
 
       - name: Crowdin
-        uses: crowdin/github-action@9787f4fcb6a8450929673f1e8db841e8a5c35a2f # v2.10.0
+        uses: crowdin/github-action@d649adabd0daa7ea2ceeb232f66c30224575bb7e # v2.15.1
         with:
           download_translations: true
           export_only_approved: true
           download_translations_args: --ignore-match
           pull_request_base_branch_name: master
         env:
-          GITHUB_TOKEN: ${{ secrets.PULL_REQUEST_TOKEN }}
-          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          CROWDIN_PROJECT_ID: ${{ vars.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
