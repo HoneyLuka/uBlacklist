@@ -8,3 +8,5 @@ pre-commit:
       glob: "*.{md,yaml,yml}"
       run: pnpm prettier --write {staged_files}
       stage_fixed: true
+      file_types:
+        - not symlink
