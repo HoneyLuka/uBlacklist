@@ -5,7 +5,7 @@ import { browser } from "../browser.ts";
 import { postMessage } from "../messages.ts";
 import { updateAllRemote as updateAllRemoteSerpInfo } from "../serpinfo/background.ts";
 import * as SerpInfoSettings from "../serpinfo/settings.ts";
-import type { Result, Subscriptions } from "../types.ts";
+import type { Result, Subscriptions, SyncForce } from "../types.ts";
 import {
   errorResult,
   Mutex,
@@ -58,6 +58,7 @@ type SyncSection = {
   ): Partial<RawStorageItems>;
   afterDownloadAll(
     cloudItems: Readonly<Partial<RawStorageItems>>,
+    localItems: Readonly<RawStorageItems>,
     latestLocalItems: Readonly<RawStorageItems>,
   ): Partial<RawStorageItems>;
   afterSync?(cloudItems: Readonly<Partial<RawStorageItems>>): void;
@@ -91,11 +92,8 @@ const syncSections: readonly SyncSection[] = [
         timestamp: cloudModifiedTime.toISOString(),
       };
     },
-    afterDownloadAll(cloudItems, latestLocalItems) {
-      if (
-        cloudItems.timestamp != null &&
-        dayjs(cloudItems.timestamp).isBefore(latestLocalItems.timestamp)
-      ) {
+    afterDownloadAll(cloudItems, localItems, latestLocalItems) {
+      if (localItems.timestamp !== latestLocalItems.timestamp) {
         return omit(cloudItems, ["ruleset", "blacklist", "timestamp"]);
       }
       return { ...cloudItems };
@@ -157,12 +155,9 @@ const syncSections: readonly SyncSection[] = [
         generalLastModified: cloudModifiedTime.toISOString(),
       };
     },
-    afterDownloadAll(cloudItems, latestLocalItems) {
+    afterDownloadAll(cloudItems, localItems, latestLocalItems) {
       if (
-        cloudItems.generalLastModified != null &&
-        dayjs(cloudItems.generalLastModified).isBefore(
-          latestLocalItems.generalLastModified,
-        )
+        localItems.generalLastModified !== latestLocalItems.generalLastModified
       ) {
         return omit(cloudItems, [
           "skipBlockDialog",
@@ -218,12 +213,10 @@ const syncSections: readonly SyncSection[] = [
         appearanceLastModified: cloudModifiedTime.toISOString(),
       };
     },
-    afterDownloadAll(cloudItems, latestLocalItems) {
+    afterDownloadAll(cloudItems, localItems, latestLocalItems) {
       if (
-        cloudItems.appearanceLastModified != null &&
-        dayjs(cloudItems.appearanceLastModified).isBefore(
-          latestLocalItems.appearanceLastModified,
-        )
+        localItems.appearanceLastModified !==
+        latestLocalItems.appearanceLastModified
       ) {
         return omit(cloudItems, [
           "linkColor",
@@ -251,6 +244,7 @@ const syncSections: readonly SyncSection[] = [
           Object.values(localItems.subscriptions).map((s) => ({
             name: s.name,
             url: s.url,
+            type: s.type ?? "ruleset",
             enabled: s.enabled ?? true,
           })),
         ),
@@ -262,6 +256,7 @@ const syncSections: readonly SyncSection[] = [
         .object({
           name: z.string(),
           url: z.string(),
+          type: z.enum(["ruleset", "domains"]).optional(),
           enabled: z.boolean().optional(),
         })
         .array()
@@ -272,10 +267,11 @@ const syncSections: readonly SyncSection[] = [
       const items = parseResult.data;
       const subscriptions: Subscriptions = {};
       let nextSubscriptionId = localItems.nextSubscriptionId;
-      for (const { name, url, enabled } of items) {
+      for (const { name, url, type, enabled } of items) {
         subscriptions[nextSubscriptionId++] = {
           name,
           url,
+          type: type ?? "ruleset",
           blacklist: "",
           updateResult: null,
           enabled: enabled ?? true,
@@ -288,12 +284,10 @@ const syncSections: readonly SyncSection[] = [
         subscriptionsLastModified: cloudModifiedTime.toISOString(),
       };
     },
-    afterDownloadAll(cloudItems, latestLocalItems) {
+    afterDownloadAll(cloudItems, localItems, latestLocalItems) {
       if (
-        cloudItems.subscriptionsLastModified != null &&
-        dayjs(cloudItems.subscriptionsLastModified).isBefore(
-          latestLocalItems.subscriptionsLastModified,
-        )
+        localItems.subscriptionsLastModified !==
+        latestLocalItems.subscriptionsLastModified
       ) {
         return omit(cloudItems, [
           "subscriptions",
@@ -339,12 +333,10 @@ const syncSections: readonly SyncSection[] = [
         },
       };
     },
-    afterDownloadAll(cloudItems, latestLocalItems) {
+    afterDownloadAll(cloudItems, localItems, latestLocalItems) {
       if (
-        cloudItems.serpInfoSettings &&
-        dayjs(cloudItems.serpInfoSettings.lastModified).isBefore(
-          latestLocalItems.serpInfoSettings.lastModified,
-        )
+        localItems.serpInfoSettings.lastModified !==
+        latestLocalItems.serpInfoSettings.lastModified
       ) {
         return omit(cloudItems, ["serpInfoSettings"]);
       }
@@ -361,6 +353,7 @@ const syncSections: readonly SyncSection[] = [
 async function doSync(
   dirtyFlags: SyncDirtyFlags,
   repeat: boolean,
+  force: SyncForce,
 ): Promise<void> {
   return mutex.lock(async () => {
     const localItems = await loadAllFromRawStorage();
@@ -393,6 +386,7 @@ async function doSync(
               filename,
               localContent,
               localModifiedTime,
+              force,
             );
             if (!cloudFile) {
               return;
@@ -421,7 +415,11 @@ async function doSync(
           return {};
         }
         for (const section of syncSections) {
-          cloudItems = section.afterDownloadAll(cloudItems, latestLocalItems);
+          cloudItems = section.afterDownloadAll(
+            cloudItems,
+            localItems,
+            latestLocalItems,
+          );
         }
         return cloudItems;
       });
@@ -443,7 +441,7 @@ async function doSync(
   });
 }
 
-export function sync(): Promise<void> {
+export function sync(force: SyncForce = "none"): Promise<void> {
   return doSync(
     {
       blocklist: true,
@@ -453,6 +451,7 @@ export function sync(): Promise<void> {
       serpInfo: true,
     },
     true,
+    force,
   );
 }
 
@@ -472,7 +471,7 @@ export function syncDelayed(dirtyFlagsUpdate: Partial<SyncDirtyFlags>): void {
   }
   timeoutId = self.setTimeout(() => {
     if (dirtyFlags) {
-      void doSync(dirtyFlags, false);
+      void doSync(dirtyFlags, false, "none");
     }
     timeoutId = null;
     dirtyFlags = null;

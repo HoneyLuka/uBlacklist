@@ -12,6 +12,7 @@ import type {
   MatchingRulesText,
   PlainRuleset,
   Result,
+  Subscription,
   SuccessResult,
 } from "./types.ts";
 
@@ -155,6 +156,16 @@ export function lines(s: string): string[] {
   return s ? s.split("\n") : [];
 }
 
+export function getSubscriptionDisplayName(
+  subscription: Readonly<Subscription>,
+): string {
+  if (subscription.name) {
+    return subscription.name;
+  }
+  const name = subscription.ruleset?.metadata.name;
+  return typeof name === "string" ? name : subscription.url;
+}
+
 export function getMatchingRulesText(
   ruleset: InteractiveRuleset,
   props: LinkProps,
@@ -191,7 +202,7 @@ export function getMatchingRulesText(
       // Add header with ruleset name
       const headerContent =
         match.rulesetName === "personal-blocklist"
-          ? translate("personalBlocklist")
+          ? translate("popup_myRulesetHeader")
           : match.rulesetName;
       matchingRulesText[ruleType] += `# ${headerContent}\n`;
       // Add individual rules

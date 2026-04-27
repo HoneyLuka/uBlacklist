@@ -31,10 +31,6 @@
     "message": "OK",
     "description": "Text for the OK button."
   },
-  "personalBlocklist": {
-    "message": "Personal Blocklist",
-    "description": "Label for the user's personal blocklist."
-  },
   "content_singleSiteBlocked": {
     "message": "uBlacklist has blocked 1 site",
     "description": "Message shown when one site is blocked."
@@ -130,6 +126,10 @@
   "popup_highlightingRulesLabel": {
     "message": "Rules highlighting this entry",
     "description": "Label for the textarea showing rules highlighting the entry."
+  },
+  "popup_myRulesetHeader": {
+    "message": "My ruleset",
+    "description": "Header shown above rules from the user's own ruleset in the matching rules view."
   },
   "popup_serpInfoMode_showBlockedResults": {
     "message": "Show blocked search results",
@@ -351,6 +351,22 @@
     "message": "Turn on",
     "description": "Text for the button to turn on sync in the dialog."
   },
+  "options_turnOnSyncDialog_initialSyncLabel": {
+    "message": "Initial sync",
+    "description": "Label for the initial-sync-behavior selector in the turn-on-sync dialog."
+  },
+  "options_turnOnSyncDialog_initialSyncLastWriteWins": {
+    "message": "Keep newest version",
+    "description": "Option that keeps whichever side (local or cloud) was modified most recently for each category."
+  },
+  "options_turnOnSyncDialog_initialSyncUseLocal": {
+    "message": "Use local version",
+    "description": "Option that uses the local version of settings, overwriting the remote version, on the first sync."
+  },
+  "options_turnOnSyncDialog_initialSyncUseRemote": {
+    "message": "Use remote version",
+    "description": "Option that uses the remote version of settings, overwriting local settings, on the first sync."
+  },
   "options_turnOffSync": {
     "message": "Turn off",
     "description": "Text for the button to turn off sync."
@@ -471,9 +487,21 @@
     "message": "Update now",
     "description": "Text for the menu item to update a subscription now."
   },
+  "options_renameSubscriptionMenu": {
+    "message": "Rename",
+    "description": "Text for the menu item to rename a subscription."
+  },
   "options_removeSubscriptionMenu": {
     "message": "Remove",
     "description": "Text for the menu item to remove a subscription."
+  },
+  "options_renameSubscriptionDialog_title": {
+    "message": "Rename subscription",
+    "description": "Title of the rename subscription dialog."
+  },
+  "options_renameSubscriptionDialog_renameButton": {
+    "message": "Rename",
+    "description": "Text for the rename button in the rename subscription dialog."
   },
   "options_updateAllSubscriptionsNowButton": {
     "message": "Update now",
@@ -483,21 +511,29 @@
     "message": "Add a subscription",
     "description": "Title of the add subscription dialog."
   },
-  "options_addSubscriptionDialog_nameLabel": {
-    "message": "Name",
-    "description": "Label for the name input in the add subscription dialog."
-  },
   "options_addSubscriptionDialog_urlLabel": {
     "message": "URL",
     "description": "Label for the URL input in the add subscription dialog."
   },
-  "options_addSubscriptionDialog_altNameLabel": {
-    "message": "Alternative name (optional)",
-    "description": "Label for the alternative name input in the add subscription dialog."
+  "options_addSubscriptionDialog_typeLabel": {
+    "message": "Type",
+    "description": "Label for the type select in the add subscription dialog."
   },
-  "options_addSubscriptionDialog_altNameDescription": {
-    "message": "The alternative name used when a downloaded ruleset does not contain a name.",
-    "description": "Helper text for the alternative name input in the add subscription dialog."
+  "options_addSubscriptionDialog_typeRuleset": {
+    "message": "Ruleset",
+    "description": "Label for the ruleset option in the type select."
+  },
+  "options_addSubscriptionDialog_typeDomains": {
+    "message": "Domains",
+    "description": "Label for the domains option in the type select."
+  },
+  "options_addSubscriptionDialog_nameLabel": {
+    "message": "Name",
+    "description": "Label for the name input in the add subscription dialog."
+  },
+  "options_addSubscriptionDialog_nameDescription": {
+    "message": "If empty, the name of the downloaded ruleset or the URL will be used.",
+    "description": "Helper text for the name input in the add subscription dialog."
   },
   "options_addSubscriptionDialog_addButton": {
     "message": "Add",
