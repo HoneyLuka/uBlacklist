@@ -50,7 +50,6 @@ const localStorageSections: readonly LocalStorageSection[] = [
         items.skipBlockDialog != null ||
         items.hideBlockLinks != null ||
         items.hideControl != null ||
-        items.enablePathDepth != null ||
         items.enableMatchingRules != null ||
         items.blockWholeSite != null
       ) {

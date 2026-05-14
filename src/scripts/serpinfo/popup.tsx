@@ -1,8 +1,9 @@
+import cog from "@mdi/svg/svg/cog.svg";
 import { useId, useState } from "react";
 import { MatchPatternMap } from "../../common/match-pattern.ts";
 import icon from "../../icons/icon.svg";
 import { browser } from "../browser.ts";
-import { Button, LinkButton } from "../components/button.tsx";
+import { Button } from "../components/button.tsx";
 import {
   FOCUS_DEFAULT_CLASS,
   FOCUS_END_CLASS,
@@ -16,6 +17,7 @@ import {
   EmbeddedDialog,
 } from "../components/dialog.tsx";
 import { Icon } from "../components/icon.tsx";
+import { IconButton } from "../components/icon-button.tsx";
 import { ControlLabel, LabelWrapper } from "../components/label.tsx";
 import { Row, RowItem } from "../components/row.tsx";
 import { Switch } from "../components/switch.tsx";
@@ -67,6 +69,7 @@ export function SerpInfoEmbeddedDialog({
           <RowItem>
             <Switch
               checked={!hideBlockedResults}
+              className={FOCUS_START_CLASS}
               id={`${id}-switch`}
               onChange={(e) => {
                 const hideBlockedResults = !e.currentTarget.checked;
@@ -86,9 +89,14 @@ export function SerpInfoEmbeddedDialog({
       <DialogFooter>
         <Row multiline right>
           <RowItem expanded>
-            <LinkButton className={FOCUS_START_CLASS} onClick={openOptionsPage}>
-              {translate("popup_openOptionsLink")}
-            </LinkButton>
+            <IconButton
+              aria-label={translate("popup_openOptionsLink")}
+              iconURL={svgToDataURL(cog)}
+              title={translate("popup_openOptionsLink")}
+              onClick={() => {
+                void openOptionsPage();
+              }}
+            />
           </RowItem>
           <RowItem>
             <Row>
@@ -156,9 +164,15 @@ export function EnableSerpInfoEmbeddedDialog() {
       <DialogFooter>
         <Row multiline right>
           <RowItem expanded>
-            <LinkButton className={FOCUS_START_CLASS} onClick={openOptionsPage}>
-              {translate("popup_openOptionsLink")}
-            </LinkButton>
+            <IconButton
+              aria-label={translate("popup_openOptionsLink")}
+              className={FOCUS_START_CLASS}
+              iconURL={svgToDataURL(cog)}
+              title={translate("popup_openOptionsLink")}
+              onClick={() => {
+                void openOptionsPage();
+              }}
+            />
           </RowItem>
           <RowItem>
             <Button onClick={() => window.close()}>

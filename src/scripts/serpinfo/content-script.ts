@@ -3,6 +3,7 @@ import isMobile from "is-mobile";
 import { createStore } from "zustand/vanilla";
 import { MatchPatternMap } from "../../common/match-pattern.ts";
 import iconSVG from "../../icons/icon.svg";
+import { defaultBlockColor } from "../constants.ts";
 import { translate } from "../locales.ts";
 import { addMessageListeners } from "../messages.ts";
 import { attributes as a, classes as c } from "./constants.ts";
@@ -122,7 +123,7 @@ function setupStyles() {
     (color) => {
       setGlobalStyle("block-color", {
         [`[${a.block}]${specificityBoost}`]: {
-          backgroundColor: `${color !== "default" ? color : "rgb(255 192 192 / 0.5)"} !important`,
+          backgroundColor: `${color !== "default" ? color : defaultBlockColor} !important`,
         },
         [`[${a.block}]${specificityBoost} *`]: {
           backgroundColor: "transparent !important",

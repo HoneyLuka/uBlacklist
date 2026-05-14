@@ -75,7 +75,7 @@ export const webdav: WebDAV = {
       const stat = (await client.stat(fullPath, {
         details: false,
       })) as FileStat;
-      if (!stat || !stat.lastmod) {
+      if (!stat?.lastmod) {
         throw new UnexpectedResponse("No lastmod in WebDAV stat response");
       }
       return { id: filename, modifiedTime: dayjs.utc(stat.lastmod) };

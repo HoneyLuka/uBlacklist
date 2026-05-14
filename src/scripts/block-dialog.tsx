@@ -1,8 +1,9 @@
+import cog from "@mdi/svg/svg/cog.svg";
 import * as punycode from "punycode/";
-import { useId, useState } from "react";
+import React, { useId, useMemo, useState } from "react";
 import icon from "../icons/icon.svg";
 import { ScopedBaseline } from "./components/baseline.tsx";
-import { Button, LinkButton } from "./components/button.tsx";
+import { Button } from "./components/button.tsx";
 import {
   FOCUS_DEFAULT_CLASS,
   FOCUS_END_CLASS,
@@ -18,96 +19,355 @@ import {
   EmbeddedDialog,
 } from "./components/dialog.tsx";
 import { Icon } from "./components/icon.tsx";
-import { Input } from "./components/input.tsx";
-import { ControlLabel, LabelWrapper } from "./components/label.tsx";
+import { IconButton } from "./components/icon-button.tsx";
+import { ControlLabel, Label, LabelWrapper } from "./components/label.tsx";
+import { MenuItem } from "./components/menu.tsx";
 import { Row, RowItem } from "./components/row.tsx";
+import { SplitButton } from "./components/split-button.tsx";
 import { StylesProvider } from "./components/styles.tsx";
 import { TextArea } from "./components/textarea.tsx";
-import { darkTheme, lightTheme, ThemeProvider } from "./components/theme.tsx";
-import { useClassName, usePrevious } from "./components/utilities.ts";
-import type { InteractiveRuleset } from "./interactive-ruleset.ts";
+import {
+  darkTheme,
+  lightTheme,
+  ThemeProvider,
+  useTheme,
+} from "./components/theme.tsx";
+import { useClassName } from "./components/utilities.ts";
+import type {
+  InteractiveRuleset,
+  Patch,
+  PatchMode,
+} from "./interactive-ruleset.ts";
 import { translate } from "./locales.ts";
-import { PathDepth } from "./path-depth.ts";
 import { getRegistrableDomain } from "./registrable-domain.ts";
 import type { LinkProps } from "./ruleset/ruleset.ts";
-import type { DialogTheme, MatchingRulesText } from "./types.ts";
-import { getMatchingRulesText, makeAltURL, svgToDataURL } from "./utilities.ts";
+import type { DialogTheme, MessageName0 } from "./types.ts";
+import { svgToDataURL } from "./utilities.ts";
+
+// ---------------------------------------------------------------------------
+// Helpers
+
+function isProcessableUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function computeHost(url: string, blockWholeSite: boolean): string {
+  if (!isProcessableUrl(url)) {
+    return url;
+  }
+  const { hostname } = new URL(url);
+  const display = blockWholeSite
+    ? (getRegistrableDomain(hostname) ?? hostname)
+    : hostname;
+  return punycode.toUnicode(display);
+}
+
+const MODE_TITLE_MESSAGE = {
+  block: "popup_blockSiteTitle",
+  unblock: "popup_unblockSiteTitle",
+  highlight: "popup_highlightSiteTitle",
+  unhighlight: "popup_unhighlightSiteTitle",
+} as const satisfies Record<PatchMode, MessageName0>;
+
+const MODE_BUTTON_MESSAGE = {
+  block: "popup_blockSiteButton",
+  unblock: "popup_unblockSiteButton",
+  highlight: "popup_highlightSiteButton",
+  unhighlight: "popup_unhighlightSiteButton",
+} as const satisfies Record<PatchMode, MessageName0>;
+
+// Property keys are sorted: `url` first, then non-`$` keys alphabetically,
+// then `$`-prefixed keys alphabetically. SERPINFO insertion order is ignored.
+function sortPropertyKeys(props: LinkProps): string[] {
+  const keys = Object.keys(props).filter(
+    (k) => k !== "url" && props[k] !== undefined,
+  );
+  const dollar = keys.filter((k) => k.startsWith("$")).sort();
+  const plain = keys.filter((k) => !k.startsWith("$")).sort();
+  return ["url", ...plain, ...dollar];
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+
+const PropertiesTable: React.FC<{ entryProps: LinkProps }> = ({
+  entryProps,
+}) => {
+  const tableClassName = useClassName(
+    () => ({
+      display: "grid",
+      gridTemplateColumns: "6em 1fr",
+      gap: "0.15em 0.75em",
+    }),
+    [],
+  );
+  const cellClassName = useClassName(
+    () => ({
+      fontFamily: "monospace",
+      maxHeight: "4.5em",
+      overflowY: "auto",
+      whiteSpace: "break-spaces",
+      wordBreak: "break-all",
+      lineBreak: "anywhere",
+    }),
+    [],
+  );
+  const keys = sortPropertyKeys(entryProps);
+  return (
+    <Row spacing="1.5em">
+      <RowItem expanded>
+        <LabelWrapper fullWidth>
+          <Label>{translate("popup_propertiesLabel")}</Label>
+        </LabelWrapper>
+        <div className={tableClassName}>
+          {keys.map((key) => (
+            <React.Fragment key={key}>
+              <div className={cellClassName}>{key}</div>
+              <div className={cellClassName}>{entryProps[key]}</div>
+            </React.Fragment>
+          ))}
+        </div>
+      </RowItem>
+    </Row>
+  );
+};
+
+const RulesToAddInput: React.FC<{
+  id: string;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}> = ({ id, value, disabled, onChange }) => {
+  return (
+    <Row spacing="1.5em">
+      <RowItem expanded>
+        <LabelWrapper disabled={disabled} fullWidth>
+          <ControlLabel for={id}>
+            {translate("popup_addedRulesLabel")}
+          </ControlLabel>
+        </LabelWrapper>
+        <TextArea
+          breakAll
+          disabled={disabled}
+          id={id}
+          monospace
+          resizable
+          rows={2}
+          spellCheck="false"
+          value={value}
+          onChange={(e) => onChange(e.currentTarget.value)}
+        />
+      </RowItem>
+    </Row>
+  );
+};
+
+const RulesDisplay: React.FC<{ label: string; value: string }> = ({
+  label,
+  value,
+}) => {
+  const theme = useTheme();
+  const bodyClassName = useClassName(
+    () => ({
+      fontFamily: "monospace",
+      whiteSpace: "pre",
+      overflowX: "auto",
+    }),
+    [],
+  );
+  const placeholderClassName = useClassName(
+    () => ({
+      color: theme.text.secondary,
+    }),
+    [theme.text.secondary],
+  );
+  return (
+    <Row spacing="1.5em">
+      <RowItem expanded>
+        <LabelWrapper fullWidth>
+          <Label>{label}</Label>
+        </LabelWrapper>
+        {value ? (
+          <div className={bodyClassName}>{value}</div>
+        ) : (
+          <div className={placeholderClassName}>
+            {translate("popup_noRules")}
+          </div>
+        )}
+      </RowItem>
+    </Row>
+  );
+};
+
+const ActionButton: React.FC<{
+  autoMode: PatchMode; // never "highlight"
+  mode: PatchMode;
+  disabled: boolean;
+  focusDefault: boolean;
+  focusEnd: boolean;
+  menuDisabled: boolean;
+  onClick: () => void;
+  onSelectMode: (mode: PatchMode) => void;
+}> = ({
+  autoMode,
+  mode,
+  disabled,
+  focusDefault,
+  focusEnd,
+  menuDisabled,
+  onClick,
+  onSelectMode,
+}) => {
+  return autoMode === "block" ? (
+    <SplitButton
+      className={focusDefault ? FOCUS_DEFAULT_CLASS : undefined}
+      disabled={disabled}
+      menu={
+        <>
+          <MenuItem onClick={() => onSelectMode("block")}>
+            {translate(MODE_BUTTON_MESSAGE.block)}
+          </MenuItem>
+          <MenuItem onClick={() => onSelectMode("highlight")}>
+            {translate(MODE_BUTTON_MESSAGE.highlight)}
+          </MenuItem>
+        </>
+      }
+      menuAriaLabel={translate("popup_changeActionLabel")}
+      menuClassName={focusEnd ? FOCUS_END_CLASS : undefined}
+      menuDisabled={menuDisabled}
+      placement="top"
+      primary
+      onClick={onClick}
+    >
+      {translate(MODE_BUTTON_MESSAGE[mode])}
+    </SplitButton>
+  ) : (
+    <Button
+      className={
+        [focusDefault && FOCUS_DEFAULT_CLASS, focusEnd && FOCUS_END_CLASS]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
+      disabled={disabled}
+      primary
+      onClick={onClick}
+    >
+      {translate(MODE_BUTTON_MESSAGE[mode])}
+    </Button>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// BlockDialogContent — body shared by BlockDialog and BlockEmbeddedDialog.
 
 type BlockDialogContentProps = {
   blockWholeSite: boolean;
   close: () => void;
-  enablePathDepth: boolean;
   enableMatchingRules: boolean;
   entryProps: LinkProps;
   id: string;
-  open: boolean;
   openOptionsPage: () => Promise<void>;
   ruleset: InteractiveRuleset;
-  onBlocked: () => void | Promise<void>;
+  onBlocked: (newSource: string) => void | Promise<void>;
 };
 
 const BlockDialogContent: React.FC<BlockDialogContentProps> = ({
   blockWholeSite,
   close,
-  enablePathDepth,
   enableMatchingRules,
   entryProps,
   id,
-  open,
   openOptionsPage,
   ruleset,
   onBlocked,
 }) => {
-  const [state, setState] = useState({
-    disabled: false,
-    unblock: false,
-    host: "",
-    detailsOpen: false,
-    matchingRulesOpen: false,
-    matchingRulesText: null as MatchingRulesText | null,
-    pathDepth: null as PathDepth | null,
-    depth: "",
-    rulesToAdd: "",
-    rulesToAddValid: false,
-    rulesToRemove: "",
-  });
-  const prevOpen = usePrevious(open);
-  if (open && !prevOpen) {
-    const url = makeAltURL(entryProps.url);
-    if (url && /^(https?|ftp)$/.test(url.scheme)) {
-      const patch = ruleset.createPatch(entryProps, blockWholeSite);
-      state.disabled = false;
-      state.unblock = patch.unblock;
-      state.host = punycode.toUnicode(
-        blockWholeSite
-          ? (getRegistrableDomain(url.host) ?? url.host)
-          : url.host,
-      );
-      state.detailsOpen = false;
-      state.matchingRulesOpen = false;
-      state.matchingRulesText = null;
-      state.pathDepth = enablePathDepth ? new PathDepth(url) : null;
-      state.depth = "0";
-      state.rulesToAdd = patch.rulesToAdd;
-      state.rulesToAddValid = true;
-      state.rulesToRemove = patch.rulesToRemove;
-    } else {
-      state.disabled = true;
-      state.unblock = false;
-      state.host = entryProps.url;
-      state.detailsOpen = false;
-      state.matchingRulesOpen = false;
-      state.matchingRulesText = null;
-      state.pathDepth = null;
-      state.depth = "";
-      state.rulesToAdd = "";
-      state.rulesToAddValid = false;
-      state.rulesToRemove = "";
-    }
-  }
-  const ok = !state.disabled && state.rulesToAddValid;
+  // ---- Derived (pure from props)
+  const urlIsProcessable = useMemo(
+    () => isProcessableUrl(entryProps.url),
+    [entryProps.url],
+  );
+  const host = useMemo(
+    () => computeHost(entryProps.url, blockWholeSite),
+    [entryProps.url, blockWholeSite],
+  );
+  // The auto-detected patch (mode = null) is the source of truth for both
+  // the initial selected mode and the SplitButton's secondary menu label.
+  // The mode in this patch is never "highlight".
+  const autoPatch = useMemo<Patch | null>(
+    () =>
+      urlIsProcessable
+        ? ruleset.createPatch(null, entryProps, {
+            useRegistrableDomain: blockWholeSite,
+            collectMatchingRules: enableMatchingRules,
+          })
+        : null,
+    [
+      urlIsProcessable,
+      ruleset,
+      entryProps,
+      blockWholeSite,
+      enableMatchingRules,
+    ],
+  );
+  const autoMode = autoPatch?.mode ?? "block";
 
-  const hostClass = useClassName(
+  // ---- State
+  // null = user has not selected a mode; follow autoPatch.mode instead.
+  const [manualMode, setManualMode] = useState<PatchMode | null>(null);
+  // null = user has not edited rulesToAdd; show patch.rulesToAdd instead.
+  // A manual value persists across mode changes; rulesToAddValid disables
+  // Apply if it doesn't fit the new mode.
+  const [manualRulesToAdd, setManualRulesToAdd] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [matchingRulesOpen, setMatchingRulesOpen] = useState(false);
+
+  // ---- Derived (state + props)
+  // Reuse autoPatch when manualMode is unset or matches autoPatch.mode;
+  // otherwise recompute. createPatch is cheap, but reusing avoids a redundant
+  // call in the common case where the user never changes mode.
+  const patch = useMemo<Patch | null>(() => {
+    if (!autoPatch) {
+      return null;
+    }
+    if (manualMode == null || manualMode === autoPatch.mode) {
+      return autoPatch;
+    }
+    return ruleset.createPatch(manualMode, entryProps, {
+      useRegistrableDomain: blockWholeSite,
+      collectMatchingRules: enableMatchingRules,
+    });
+  }, [
+    autoPatch,
+    manualMode,
+    ruleset,
+    entryProps,
+    blockWholeSite,
+    enableMatchingRules,
+  ]);
+  const mode: PatchMode = patch?.mode ?? "block";
+  const rulesToAdd = manualRulesToAdd ?? patch?.rulesToAdd ?? "";
+  const rulesToAddValid = useMemo(
+    () => (patch ? ruleset.validateRulesToAdd(patch, rulesToAdd) : false),
+    [ruleset, patch, rulesToAdd],
+  );
+
+  // ---- Event handlers
+  const handleApply = async () => {
+    if (!patch) {
+      return;
+    }
+    const newSource = ruleset.applyPatch(patch, rulesToAdd);
+    await Promise.resolve(onBlocked(newSource));
+    close();
+  };
+
+  // ---- Styles
+  const hostClassName = useClassName(
     () => ({
       wordBreak: "break-all",
     }),
@@ -122,288 +382,109 @@ const BlockDialogContent: React.FC<BlockDialogContentProps> = ({
             <RowItem>
               <Icon iconSize="24px" url={svgToDataURL(icon)} />
             </RowItem>
-            <RowItem expanded>
-              {translate(
-                state.unblock
-                  ? "popup_unblockSiteTitle"
-                  : "popup_blockSiteTitle",
-              )}
-            </RowItem>
+            <RowItem expanded>{translate(MODE_TITLE_MESSAGE[mode])}</RowItem>
           </Row>
         </DialogTitle>
       </DialogHeader>
       <DialogBody>
         <Row>
           <RowItem expanded>
-            <span className={hostClass}>{state.host}</span>
+            <span className={hostClassName}>{host}</span>
           </RowItem>
         </Row>
         <Row>
           <RowItem expanded>
             <Details
-              open={state.detailsOpen}
-              onToggle={(e) => {
-                const { open } = e.currentTarget;
-                setState((s) => ({
-                  ...s,
-                  detailsOpen: open,
-                }));
-              }}
+              open={detailsOpen}
+              onToggle={(e) => setDetailsOpen(e.currentTarget.open)}
             >
               <DetailsSummary className={FOCUS_START_CLASS}>
                 {translate("popup_details")}
               </DetailsSummary>
               <DetailsBody>
-                <Row>
-                  <RowItem expanded>
-                    <LabelWrapper fullWidth>
-                      <ControlLabel for={`${id}-url`}>
-                        {translate("popup_pageURLLabel")}
-                      </ControlLabel>
-                    </LabelWrapper>
-                    {open && (
-                      <TextArea
-                        breakAll
-                        id={`${id}-url`}
-                        readOnly
-                        rows={2}
-                        value={entryProps.url}
-                      />
-                    )}
-                  </RowItem>
-                </Row>
-                {enablePathDepth && (
-                  <Row>
-                    <RowItem expanded>
-                      <LabelWrapper disabled={state.disabled} fullWidth>
-                        <ControlLabel for={`${id}-depth`}>
-                          {translate("popup_pathDepth")}
-                        </ControlLabel>
-                      </LabelWrapper>
-                      {open && (
-                        <Input
-                          disabled={state.disabled}
-                          id={`${id}-depth`}
-                          max={state.pathDepth?.maxDepth() ?? 0}
-                          min={0}
-                          type="number"
-                          value={state.depth}
-                          onChange={(e) => {
-                            const depth = e.currentTarget.value;
-                            if (
-                              !state.pathDepth ||
-                              !depth ||
-                              !e.currentTarget.validity.valid
-                            ) {
-                              setState((s) => ({ ...s, depth }));
-                              return;
-                            }
-                            const rulesToAdd =
-                              state.pathDepth.suggestMatchPattern(
-                                Number(depth),
-                                state.unblock,
-                              );
-                            const patch = ruleset.modifyPatch({ rulesToAdd });
-                            setState((s) => ({
-                              ...s,
-                              depth,
-                              rulesToAdd,
-                              rulesToAddValid: Boolean(patch),
-                            }));
-                          }}
-                        />
-                      )}
-                    </RowItem>
-                  </Row>
-                )}
-                <Row>
-                  <RowItem expanded>
-                    <LabelWrapper fullWidth>
-                      <ControlLabel for={`${id}-page-title`}>
-                        {translate("popup_pageTitleLabel")}
-                      </ControlLabel>
-                    </LabelWrapper>
-                    <TextArea
-                      id={`${id}-page-title`}
-                      readOnly
-                      rows={2}
-                      spellCheck="false"
-                      value={entryProps.title ?? ""}
-                    />
-                  </RowItem>
-                </Row>
-                <Row>
-                  <RowItem expanded>
-                    <LabelWrapper disabled={state.disabled} fullWidth>
-                      <ControlLabel for={`${id}-rules-to-add`}>
-                        {translate("popup_addedRulesLabel")}
-                      </ControlLabel>
-                    </LabelWrapper>
-                    {open && (
-                      <TextArea
-                        breakAll
-                        disabled={state.disabled}
-                        id={`${id}-rules-to-add`}
-                        rows={2}
-                        spellCheck="false"
-                        value={state.rulesToAdd}
-                        onChange={(e) => {
-                          const rulesToAdd = e.currentTarget.value;
-                          const patch = ruleset.modifyPatch({ rulesToAdd });
-                          setState((s) => ({
-                            ...s,
-                            rulesToAdd,
-                            rulesToAddValid: Boolean(patch),
-                          }));
-                        }}
-                      />
-                    )}
-                  </RowItem>
-                </Row>
-                <Row>
-                  <RowItem expanded>
-                    <LabelWrapper disabled={state.disabled} fullWidth>
-                      <ControlLabel for={`${id}-rules-to-remove`}>
-                        {translate("popup_removedRulesLabel")}
-                      </ControlLabel>
-                    </LabelWrapper>
-                    {open && (
-                      <TextArea
-                        breakAll
-                        disabled={state.disabled}
-                        id={`${id}-rules-to-remove`}
-                        readOnly
-                        rows={2}
-                        value={state.rulesToRemove}
-                      />
-                    )}
-                  </RowItem>
-                </Row>
+                <PropertiesTable entryProps={entryProps} />
+                <RulesToAddInput
+                  id={`${id}-rules-to-add`}
+                  value={rulesToAdd}
+                  disabled={!urlIsProcessable}
+                  onChange={setManualRulesToAdd}
+                />
+                <RulesDisplay
+                  label={translate("popup_removedRulesLabel")}
+                  value={patch?.rulesToRemove ?? ""}
+                />
               </DetailsBody>
             </Details>
-            {enableMatchingRules && (
+          </RowItem>
+        </Row>
+        {patch?.matchingRules && (
+          <Row>
+            <RowItem expanded>
               <Details
-                open={state.matchingRulesOpen}
-                onToggle={(e) => {
-                  const { open } = e.currentTarget;
-                  const matchingRulesText = open
-                    ? getMatchingRulesText(ruleset, entryProps)
-                    : null;
-                  setState((s) => ({
-                    ...s,
-                    matchingRulesOpen: open,
-                    matchingRulesText,
-                  }));
-                }}
+                open={matchingRulesOpen}
+                onToggle={(e) => setMatchingRulesOpen(e.currentTarget.open)}
               >
-                <DetailsSummary className={FOCUS_START_CLASS}>
+                <DetailsSummary>
                   {translate("popup_matchingRules")}
                 </DetailsSummary>
                 <DetailsBody>
-                  <Row>
-                    <RowItem expanded>
-                      <LabelWrapper fullWidth>
-                        <ControlLabel for={`${id}-blocking-rules`}>
-                          {translate("popup_blockingRulesLabel")}
-                        </ControlLabel>
-                      </LabelWrapper>
-                      {state.matchingRulesOpen && (
-                        <TextArea
-                          breakAll
-                          id={`${id}-blocking-rules`}
-                          readOnly
-                          monospace
-                          nowrap
-                          rows={4}
-                          resizable
-                          value={state.matchingRulesText?.blockRules}
-                        />
-                      )}
-                    </RowItem>
-                  </Row>
-                  <Row>
-                    <RowItem expanded>
-                      <LabelWrapper fullWidth>
-                        <ControlLabel for={`${id}-unblocking-rules`}>
-                          {translate("popup_unblockingRulesLabel")}
-                        </ControlLabel>
-                      </LabelWrapper>
-                      {state.matchingRulesOpen && (
-                        <TextArea
-                          breakAll
-                          id={`${id}-unblocking-rules`}
-                          readOnly
-                          monospace
-                          nowrap
-                          rows={4}
-                          resizable
-                          value={state.matchingRulesText?.unblockRules}
-                        />
-                      )}
-                    </RowItem>
-                  </Row>
-                  <Row>
-                    <RowItem expanded>
-                      <LabelWrapper fullWidth>
-                        <ControlLabel for={`${id}-highlight-rules`}>
-                          {translate("popup_highlightingRulesLabel")}
-                        </ControlLabel>
-                      </LabelWrapper>
-                      {state.matchingRulesOpen && (
-                        <TextArea
-                          breakAll
-                          id={`${id}-highlight-rules`}
-                          readOnly
-                          monospace
-                          nowrap
-                          rows={4}
-                          resizable
-                          value={state.matchingRulesText?.highlightRules}
-                        />
-                      )}
-                    </RowItem>
-                  </Row>
+                  <RulesDisplay
+                    label={translate("popup_blockingRulesLabel")}
+                    value={patch.matchingRules.block}
+                  />
+                  <RulesDisplay
+                    label={translate("popup_unblockingRulesLabel")}
+                    value={patch.matchingRules.unblock}
+                  />
+                  <RulesDisplay
+                    label={translate("popup_highlightingRulesLabel")}
+                    value={patch.matchingRules.highlight}
+                  />
                 </DetailsBody>
               </Details>
-            )}
-          </RowItem>
-        </Row>
+            </RowItem>
+          </Row>
+        )}
       </DialogBody>
       <DialogFooter>
         <Row multiline right>
           <RowItem expanded>
-            <LinkButton onClick={openOptionsPage}>
-              {translate("popup_openOptionsLink")}
-            </LinkButton>
+            <IconButton
+              aria-label={translate("popup_openOptionsLink")}
+              iconURL={svgToDataURL(cog)}
+              title={translate("popup_openOptionsLink")}
+              onClick={() => {
+                void openOptionsPage();
+              }}
+            />
           </RowItem>
           <RowItem>
             <Row>
               <RowItem>
-                <Button className={!ok ? FOCUS_END_CLASS : ""} onClick={close}>
+                <Button
+                  className={
+                    !urlIsProcessable
+                      ? `${FOCUS_DEFAULT_CLASS} ${FOCUS_END_CLASS}`
+                      : undefined
+                  }
+                  onClick={close}
+                >
                   {translate("cancelButton")}
                 </Button>
               </RowItem>
               <RowItem>
-                <Button
-                  className={
-                    ok
-                      ? `${FOCUS_END_CLASS} ${FOCUS_DEFAULT_CLASS}`
-                      : FOCUS_DEFAULT_CLASS
-                  }
-                  disabled={!ok}
-                  primary
-                  onClick={async () => {
-                    ruleset.applyPatch();
-                    await Promise.resolve(onBlocked());
-                    close();
+                <ActionButton
+                  mode={mode}
+                  autoMode={autoMode}
+                  disabled={!rulesToAddValid}
+                  menuDisabled={!urlIsProcessable}
+                  focusDefault={urlIsProcessable}
+                  focusEnd={urlIsProcessable}
+                  onClick={() => {
+                    void handleApply();
                   }}
-                >
-                  {translate(
-                    state.unblock
-                      ? "popup_unblockSiteButton"
-                      : "popup_blockSiteButton",
-                  )}
-                </Button>
+                  onSelectMode={setManualMode}
+                />
               </RowItem>
             </Row>
           </RowItem>
@@ -413,15 +494,20 @@ const BlockDialogContent: React.FC<BlockDialogContentProps> = ({
   );
 };
 
+// ---------------------------------------------------------------------------
+// Wrappers
+
 export type BlockDialogProps = {
+  open: boolean;
   target: HTMLElement | ShadowRoot;
   theme: DialogTheme;
 } & Omit<BlockDialogContentProps, "id">;
 
 export const BlockDialog: React.FC<BlockDialogProps> = ({
+  open,
   target,
   theme,
-  ...props
+  ...contentProps
 }) => {
   const id = useId();
   return (
@@ -430,11 +516,17 @@ export const BlockDialog: React.FC<BlockDialogProps> = ({
         <ScopedBaseline>
           <Dialog
             aria-labelledby={`${id}-title`}
-            close={props.close}
-            open={props.open}
+            close={contentProps.close}
+            open={open}
             width="360px"
           >
-            <BlockDialogContent id={id} {...props} />
+            {open && (
+              <BlockDialogContent
+                key={contentProps.entryProps.url}
+                id={id}
+                {...contentProps}
+              />
+            )}
           </Dialog>
         </ScopedBaseline>
       </ThemeProvider>
@@ -442,10 +534,7 @@ export const BlockDialog: React.FC<BlockDialogProps> = ({
   );
 };
 
-export type BlockEmbeddedDialogProps = Omit<
-  BlockDialogContentProps,
-  "id" | "open"
->;
+export type BlockEmbeddedDialogProps = Omit<BlockDialogContentProps, "id">;
 
 export const BlockEmbeddedDialog: React.FC<BlockEmbeddedDialogProps> = (
   props,
@@ -457,7 +546,7 @@ export const BlockEmbeddedDialog: React.FC<BlockEmbeddedDialogProps> = (
       close={props.close}
       width="360px"
     >
-      <BlockDialogContent id={id} open={true} {...props} />
+      <BlockDialogContent key={props.entryProps.url} id={id} {...props} />
     </EmbeddedDialog>
   );
 };

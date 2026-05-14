@@ -9,7 +9,6 @@ import { browser } from "./browser.ts";
 import { Baseline } from "./components/baseline.tsx";
 import { AutoThemeProvider } from "./components/theme.tsx";
 import { useClassName } from "./components/utilities.ts";
-import { InteractiveRuleset } from "./interactive-ruleset.ts";
 import { loadFromLocalStorage, saveToLocalStorage } from "./local-storage.ts";
 import { translate } from "./locales.ts";
 import { sendMessage, sendMessageToTab } from "./messages.ts";
@@ -18,7 +17,7 @@ import {
   EnableSerpInfoEmbeddedDialog,
   SerpInfoEmbeddedDialog,
 } from "./serpinfo/popup.tsx";
-import { fromPlainRuleset, getSubscriptionDisplayName } from "./utilities.ts";
+import { createInteractiveRuleset } from "./utilities.ts";
 
 async function openOptionsPage(): Promise<void> {
   await sendMessage("open-options-page");
@@ -102,28 +101,19 @@ const Popup: React.FC = () => {
         "ruleset",
         "blacklist",
         "subscriptions",
-        "enablePathDepth",
-        "enableMatchingRules",
         "blockWholeSite",
+        "enableMatchingRules",
       ]);
-      const ruleset = new InteractiveRuleset(
-        fromPlainRuleset(options.ruleset || null, options.blacklist),
-        Object.values(options.subscriptions)
-          .filter((subscription) => subscription.enabled ?? true)
-          .map((subscription) => ({
-            name: getSubscriptionDisplayName(subscription),
-            ruleset: fromPlainRuleset(
-              subscription.ruleset || null,
-              subscription.blacklist,
-            ),
-          })),
+      const ruleset = createInteractiveRuleset(
+        options.blacklist,
+        options.ruleset,
+        options.subscriptions,
       );
       setState({
         type: "block",
         props: {
           blockWholeSite: options.blockWholeSite,
           close: () => window.close(),
-          enablePathDepth: options.enablePathDepth,
           enableMatchingRules: options.enableMatchingRules,
           openOptionsPage,
           entryProps: {
@@ -131,8 +121,8 @@ const Popup: React.FC = () => {
             ...(title != null ? { title } : {}),
           },
           ruleset,
-          onBlocked: () =>
-            saveToLocalStorage({ blacklist: ruleset.toString() }, "popup"),
+          onBlocked: (newSource) =>
+            saveToLocalStorage({ blacklist: newSource }, "popup"),
         },
       });
     })();

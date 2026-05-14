@@ -118,7 +118,6 @@ const syncSections: readonly SyncSection[] = [
           skipBlockDialog: localItems.skipBlockDialog,
           hideBlockLinks: localItems.hideBlockLinks,
           hideControl: localItems.hideControl,
-          enablePathDepth: localItems.enablePathDepth,
           enableMatchingRules: localItems.enableMatchingRules,
           blockWholeSite: localItems.blockWholeSite,
         }),
@@ -131,7 +130,6 @@ const syncSections: readonly SyncSection[] = [
           skipBlockDialog: z.boolean(),
           hideBlockLinks: z.boolean(),
           hideControl: z.boolean(),
-          enablePathDepth: z.boolean(),
           enableMatchingRules: z.boolean().optional(),
           blockWholeSite: z.boolean().optional(),
         })
@@ -145,7 +143,6 @@ const syncSections: readonly SyncSection[] = [
         skipBlockDialog: items.skipBlockDialog,
         hideBlockLinks: items.hideBlockLinks,
         hideControl: items.hideControl,
-        enablePathDepth: items.enablePathDepth,
         ...(items.enableMatchingRules != null
           ? { enableMatchingRules: items.enableMatchingRules }
           : {}),
@@ -163,7 +160,6 @@ const syncSections: readonly SyncSection[] = [
           "skipBlockDialog",
           "hideBlockLinks",
           "hideControl",
-          "enablePathDepth",
           "enableMatchingRules",
           "blockWholeSite",
           "generalLastModified",

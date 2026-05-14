@@ -15,9 +15,11 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     const theme = useTheme();
     const wrapperClassName = useClassName(
       () => ({
+        height: compact ? "24px" : "36px",
         position: "relative",
+        width: compact ? "24px" : "36px",
       }),
-      [],
+      [compact],
     );
     const buttonClassName = useClassName(
       () => ({
@@ -25,9 +27,9 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         border: "none",
         cursor: "pointer",
         display: "block",
-        height: compact ? "24px" : "36px",
+        height: "100%",
         padding: compact ? 0 : "6px",
-        width: compact ? "24px" : "36px",
+        width: "100%",
         "&:disabled": {
           cursor: "default",
           opacity: DISABLED_OPACITY,

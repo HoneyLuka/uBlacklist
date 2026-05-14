@@ -21,6 +21,7 @@ import {
   SectionTitle,
 } from "../components/section.tsx";
 import { useClassName } from "../components/utilities.ts";
+import { defaultBlockColor, defaultHighlightColor } from "../constants.ts";
 import { saveToLocalStorage } from "../local-storage.ts";
 import { translate } from "../locales.ts";
 import { svgToDataURL } from "../utilities.ts";
@@ -160,7 +161,7 @@ const SetHighlightColors: React.FC = () => {
             aria-label={translate("options_highlightColorAdd")}
             iconURL={svgToDataURL(addIcon)}
             onClick={() => {
-              colorsAndKeys.push(["#ddeeff", nextKey.current++]);
+              colorsAndKeys.push([defaultHighlightColor, nextKey.current++]);
               setColorsAndKeys([...colorsAndKeys]);
               void saveToLocalStorage(
                 { highlightColors: colorsAndKeys.map(([color]) => color) },
@@ -349,7 +350,7 @@ export const AppearanceSection: React.FC<{ id: string }> = (props) => {
       </SectionHeader>
       <SectionBody>
         <SetColorItem
-          initialColor="#ffe0e0"
+          initialColor={defaultBlockColor}
           itemKey="blockColor"
           label={translate("options_blockColor")}
         />

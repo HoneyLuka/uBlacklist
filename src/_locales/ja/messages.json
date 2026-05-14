@@ -55,6 +55,10 @@
     "message": "このサイトのブロックを解除する",
     "description": "Link text to unblock a site."
   },
+  "content_unhighlightSiteLink": {
+    "message": "このサイトのハイライトを解除する",
+    "description": "Link text to unhighlight a site."
+  },
   "popup_blockSiteTitle": {
     "message": "このサイトをブロックする",
     "description": "Title of the popup to block a site."
@@ -63,21 +67,21 @@
     "message": "このサイトのブロックを解除する",
     "description": "Title of the popup to unblock a site."
   },
+  "popup_highlightSiteTitle": {
+    "message": "このサイトをハイライトする",
+    "description": "Title of the popup to highlight a site."
+  },
+  "popup_unhighlightSiteTitle": {
+    "message": "このサイトのハイライトを解除する",
+    "description": "Title of the popup to unhighlight a site."
+  },
   "popup_details": {
     "message": "詳細",
     "description": "Title of the details disclosure widget."
   },
-  "popup_pageURLLabel": {
-    "message": "ページの URL",
-    "description": "Label for the textarea showing the page URL."
-  },
-  "popup_pathDepth": {
-    "message": "階層",
-    "description": "Label for the input showing the path depth for rules to be added."
-  },
-  "popup_pageTitleLabel": {
-    "message": "ページのタイトル",
-    "description": "Label for the textarea showing the page title."
+  "popup_propertiesLabel": {
+    "message": "プロパティ",
+    "description": "Label for the table showing the entry's URL, title, and other properties."
   },
   "popup_addedRulesLabel": {
     "message": "追加されるルール",
@@ -87,6 +91,10 @@
     "message": "削除されるルール",
     "description": "Label for the textarea showing rules to be removed."
   },
+  "popup_noRules": {
+    "message": "(なし)",
+    "description": "Placeholder shown in a rules list when no rules apply."
+  },
   "popup_blockSiteButton": {
     "message": "ブロック",
     "description": "Text for the button to block a site."
@@ -94,6 +102,18 @@
   "popup_unblockSiteButton": {
     "message": "ブロックを解除",
     "description": "Text for the button to unblock a site."
+  },
+  "popup_highlightSiteButton": {
+    "message": "ハイライト",
+    "description": "Text for the button to highlight a site."
+  },
+  "popup_unhighlightSiteButton": {
+    "message": "ハイライトを解除",
+    "description": "Text for the button to unhighlight a site."
+  },
+  "popup_changeActionLabel": {
+    "message": "アクションを変更",
+    "description": "Accessibility label for the dropdown arrow that lets the user change the main action (block / unblock / highlight)."
   },
   "popup_openOptionsLink": {
     "message": "オプション",
@@ -128,7 +148,7 @@
     "description": "Label for the textarea showing rules highlighting the entry."
   },
   "popup_myRulesetHeader": {
-    "message": "My ruleset",
+    "message": "マイルールセット",
     "description": "Header shown above rules from the user's own ruleset in the matching rules view."
   },
   "popup_serpInfoMode_showBlockedResults": {
@@ -488,7 +508,7 @@
     "description": "Text for the menu item to update a subscription now."
   },
   "options_renameSubscriptionMenu": {
-    "message": "Rename",
+    "message": "名前を変更",
     "description": "Text for the menu item to rename a subscription."
   },
   "options_removeSubscriptionMenu": {
@@ -496,11 +516,11 @@
     "description": "Text for the menu item to remove a subscription."
   },
   "options_renameSubscriptionDialog_title": {
-    "message": "Rename subscription",
+    "message": "購読の名前を変更する",
     "description": "Title of the rename subscription dialog."
   },
   "options_renameSubscriptionDialog_renameButton": {
-    "message": "Rename",
+    "message": "名前を変更",
     "description": "Text for the rename button in the rename subscription dialog."
   },
   "options_updateAllSubscriptionsNowButton": {
@@ -516,15 +536,15 @@
     "description": "Label for the URL input in the add subscription dialog."
   },
   "options_addSubscriptionDialog_typeLabel": {
-    "message": "Type",
+    "message": "タイプ",
     "description": "Label for the type select in the add subscription dialog."
   },
   "options_addSubscriptionDialog_typeRuleset": {
-    "message": "Ruleset",
+    "message": "ルールセット",
     "description": "Label for the ruleset option in the type select."
   },
   "options_addSubscriptionDialog_typeDomains": {
-    "message": "Domains",
+    "message": "ドメインリスト",
     "description": "Label for the domains option in the type select."
   },
   "options_addSubscriptionDialog_nameLabel": {
@@ -532,7 +552,7 @@
     "description": "Label for the name input in the add subscription dialog."
   },
   "options_addSubscriptionDialog_nameDescription": {
-    "message": "If empty, the name of the downloaded ruleset or the URL will be used.",
+    "message": "空の場合は、ダウンロードしたルールセットの名前または URL が使用されます。",
     "description": "Helper text for the name input in the add subscription dialog."
   },
   "options_addSubscriptionDialog_addButton": {

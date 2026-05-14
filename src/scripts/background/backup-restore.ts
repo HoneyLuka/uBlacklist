@@ -20,7 +20,6 @@ export async function backup(): Promise<LocalStorageItemsBackupRestore> {
     "skipBlockDialog",
     "hideBlockLinks",
     "hideControl",
-    "enablePathDepth",
     "enableMatchingRules",
     "linkColor",
     "blockColor",
@@ -82,7 +81,6 @@ export async function restore(
       skipBlockDialog: items.skipBlockDialog ?? defaults.skipBlockDialog,
       hideBlockLinks: items.hideBlockLinks ?? defaults.hideBlockLinks,
       hideControl: items.hideControl ?? defaults.hideControl,
-      enablePathDepth: items.enablePathDepth ?? defaults.enablePathDepth,
       enableMatchingRules:
         items.enableMatchingRules ?? defaults.enableMatchingRules,
       generalLastModified: now,

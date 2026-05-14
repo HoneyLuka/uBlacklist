@@ -56,7 +56,7 @@ export const $ZodDiscriminatedTupleUnion: core.$constructor<$ZodDiscriminatedTup
     > = new Map();
     for (const [index, option] of def.options.entries()) {
       const values = option._zod.def.items[0]._zod.values;
-      if (!values || !values.size) {
+      if (!values?.size) {
         throw new Error(
           `Invalid discriminated tuple union option at index ${index}`,
         );

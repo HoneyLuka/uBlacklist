@@ -1,11 +1,10 @@
 import { isEqual } from "es-toolkit";
 import { createStore } from "zustand/vanilla";
 import { shallow } from "zustand/vanilla/shallow";
-import { InteractiveRuleset } from "../interactive-ruleset.ts";
+import type { InteractiveRuleset } from "../interactive-ruleset.ts";
 import { translate } from "../locales.ts";
 import { postMessage } from "../messages.ts";
-import type { PlainRuleset, Subscriptions } from "../types.ts";
-import { fromPlainRuleset, getSubscriptionDisplayName } from "../utilities.ts";
+import { createInteractiveRuleset } from "../utilities.ts";
 import {
   type ButtonProps,
   type PropertyCommand,
@@ -104,32 +103,13 @@ function addButton(
   }
 }
 
-function createInteractiveRuleset(
-  blacklist: string,
-  ruleset: PlainRuleset | null,
-  subscriptions: Subscriptions,
-): InteractiveRuleset {
-  return new InteractiveRuleset(
-    fromPlainRuleset(ruleset || null, blacklist),
-    Object.values(subscriptions)
-      .filter((subscription) => subscription.enabled ?? true)
-      .map((subscription) => ({
-        name: getSubscriptionDisplayName(subscription),
-        ruleset: fromPlainRuleset(
-          subscription.ruleset || null,
-          subscription.blacklist,
-        ),
-      })),
-  );
-}
-
 class Filter {
   constructor(serpDescriptions: readonly SerpDescription[]) {
     this.#serpDescriptions = serpDescriptions;
     const state = storageStore.getState();
     this.#ruleset = createInteractiveRuleset(
       state.blacklist,
-      state.ruleset || null,
+      state.ruleset,
       state.subscriptions,
     );
     this.#observer = new MutationObserver((records) => {
@@ -155,7 +135,7 @@ class Filter {
         closeDialog();
         this.#ruleset = createInteractiveRuleset(
           slice.blacklist,
-          slice.ruleset || null,
+          slice.ruleset,
           slice.subscriptions,
         );
         for (const result of this.#results.values()) {
@@ -267,6 +247,7 @@ class Filter {
         {
           blockLabel: translate("content_blockSiteLink"),
           unblockLabel: translate("content_unblockSiteLink"),
+          unhighlightLabel: translate("content_unhighlightSiteLink"),
           onClick: (event) => {
             if (result.url != null) {
               openDialog(result.url, result.props, this.#ruleset, event);

@@ -1,5 +1,4 @@
 import type dayjs from "dayjs";
-import type { RulesetMatches } from "./interactive-ruleset.ts";
 import type {
   SerpInfoSettings,
   Serializable as SerpInfoSettingsSerializable,
@@ -107,7 +106,6 @@ export type LocalStorageItems = {
   skipBlockDialog: boolean;
   hideBlockLinks: boolean;
   hideControl: boolean;
-  enablePathDepth: boolean;
   enableMatchingRules: boolean;
   blockWholeSite: boolean;
 
@@ -160,7 +158,6 @@ export type LocalStorageItemsBackupRestore = Pick<
   | "skipBlockDialog"
   | "hideBlockLinks"
   | "hideControl"
-  | "enablePathDepth"
   | "enableMatchingRules"
   | "linkColor"
   | "blockColor"
@@ -204,9 +201,3 @@ export type Subscription = {
 
 export type Subscriptions = Record<SubscriptionId, Subscription>;
 // #endregion Subscriptions
-
-// #region MatchingRules
-export type MatchingRuleKind = keyof Omit<RulesetMatches, "rulesetName">;
-
-export type MatchingRulesText = Record<MatchingRuleKind, string>;
-// #endregion MatchingRules
