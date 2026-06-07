@@ -1,5 +1,4 @@
 allowBuilds:
-  "@iorate/wepub": true
   esbuild: true
   lefthook: true
 
@@ -8,3 +7,5 @@ blockExoticSubdeps: true
 minimumReleaseAge: 1440 # 1 day
 
 trustPolicy: no-downgrade
+
+virtualStoreDirMaxLength: 120 # pin for AMO reproducible builds
