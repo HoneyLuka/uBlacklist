@@ -1,3 +1,8 @@
+import type {
+  PropertyCommand,
+  ResultDescription,
+  SerpDescription,
+} from "@ublacklist/serpinfo";
 import { isEqual } from "es-toolkit";
 import { createStore } from "zustand/vanilla";
 import { shallow } from "zustand/vanilla/shallow";
@@ -7,7 +12,6 @@ import { postMessage } from "../messages.ts";
 import { createInteractiveRuleset } from "../utilities.ts";
 import {
   type ButtonProps,
-  type PropertyCommand,
   runButtonCommand,
   runPropertyCommand,
   runRootCommand,
@@ -15,7 +19,6 @@ import {
 import { attributes as a } from "./constants.ts";
 import { closeDialog, openDialog } from "./dialog.tsx";
 import { storageStore } from "./storage-store.ts";
-import type { ResultDescription, SerpDescription } from "./types.ts";
 
 export const blockedResultCountStore = createStore(() => 0);
 
@@ -258,6 +261,12 @@ class Filter {
       );
     }
     result.root.setAttribute(a.result, "1");
+    if (result.description.extraSelector != null) {
+      result.root.setAttribute(
+        a.extraSelector,
+        result.description.extraSelector,
+      );
+    }
     this.#judgeResult(result);
     this.#results.set(result.root, result);
   }
@@ -265,30 +274,33 @@ class Filter {
   #removeResult(result: Result) {
     result.removeButton?.();
     result.root.removeAttribute(a.result);
+    result.root.removeAttribute(a.extraSelector);
     if (result.root.hasAttribute(a.block)) {
-      result.root.removeAttribute(a.block);
       --this.#blockedResultCount;
     }
+    result.root.removeAttribute(a.block);
+    result.root.removeAttribute(a.preserveSpace);
     result.root.removeAttribute(a.highlight);
     this.#results.delete(result.root);
   }
 
   #judgeResult(result: Result) {
     if (result.root.hasAttribute(a.block)) {
-      result.root.removeAttribute(a.block);
       --this.#blockedResultCount;
     }
+    result.root.removeAttribute(a.block);
+    result.root.removeAttribute(a.preserveSpace);
     result.root.removeAttribute(a.highlight);
     if (result.url != null) {
       const queryResult = this.#ruleset.query({
-        ...result.props,
         url: result.url,
+        props: result.props,
       });
       if (queryResult?.type === "block") {
-        result.root.setAttribute(
-          a.block,
-          result.description.preserveSpace ? "2" : "1",
-        );
+        result.root.setAttribute(a.block, "1");
+        if (result.description.preserveSpace) {
+          result.root.setAttribute(a.preserveSpace, "1");
+        }
         ++this.#blockedResultCount;
       } else if (queryResult?.type === "highlight") {
         result.root.setAttribute(a.highlight, String(queryResult.colorNumber));
