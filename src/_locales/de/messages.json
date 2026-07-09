@@ -403,10 +403,6 @@
     "message": "Synchronisiere…",
     "description": "Message indicating sync is running."
   },
-  "options_syncReloadButton": {
-    "message": "Neu laden",
-    "description": "Text for the button to reload sync."
-  },
   "options_syncNowButton": {
     "message": "Jetzt synchronisieren",
     "description": "Text for the button to sync now."
@@ -435,9 +431,17 @@
     "message": "SERPINFO",
     "description": "Label for the switch to sync SERPINFO."
   },
-  "options_syncInterval": {
-    "message": "Synchronisationsintervall",
-    "description": "Label for the select to choose a sync interval."
+  "options_syncIntervalInMinutes": {
+    "message": "Sync interval (minutes)",
+    "description": "Label for the number field to set a sync interval in minutes."
+  },
+  "options_increaseIntervalButton": {
+    "message": "Increase",
+    "description": "Accessible name for the button to increase an interval."
+  },
+  "options_decreaseIntervalButton": {
+    "message": "Decrease",
+    "description": "Accessible name for the button to decrease an interval."
   },
   "options_subscriptionTitle": {
     "message": "Abonnement",
@@ -563,9 +567,9 @@
     "message": "Regeln",
     "description": "Label for the textarea in the show subscription dialog."
   },
-  "options_updateInterval": {
-    "message": "Aktualisierungsintervall",
-    "description": "Label for the select to choose an update interval."
+  "options_updateIntervalInDays": {
+    "message": "Update interval (days)",
+    "description": "Label for the number field to set an update interval in days."
   },
   "options_backupRestoreTitle": {
     "message": "Sichern und Wiederherstellen",
@@ -764,7 +768,7 @@
     "description": "Label for the radio button to sync with WebDAV."
   },
   "clouds_webdavSyncDescription": {
-    "message": "A file will be created within the folder at the URL.",
+    "message": "In dem Ordner unter der angegebenen URL wird eine Datei erstellt.",
     "description": "Description for WebDAV sync."
   },
   "clouds_webdavSyncTurnedOn": {
@@ -772,11 +776,11 @@
     "description": "Message indicating WebDAV sync is turned on."
   },
   "clouds_webdavUrlLabel": {
-    "message": "WebDAV URL",
+    "message": "WebDAV-URL",
     "description": "Label for the input for the WebDAV URL."
   },
   "clouds_webdavUrlDescription": {
-    "message": "The folder specified by the URL must already exist.",
+    "message": "Der durch die URL angegebene Ordner muss bereits vorhanden sein.",
     "description": "Description for the input for the WebDAV URL."
   },
   "clouds_webdavUsernameLabel": {

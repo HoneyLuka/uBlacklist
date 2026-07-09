@@ -5,13 +5,14 @@ import * as dotenv from "dotenv";
 import * as esbuild from "esbuild";
 import fse from "fs-extra";
 import { z } from "zod";
+import pkg from "../package.json" with { type: "json" };
 import { getManifest, type ManifestContext } from "../src/manifest.ts";
-import { getLicenseTexts } from "./get-license-texts.ts";
 
 type Context = ManifestContext & {
+  e2e: boolean;
   srcDir: string;
   destDir: string;
-  licenseFallbackDir: string;
+  additionalLicensePaths: Record<string, string>;
 };
 
 async function getStaticAssets(context: Context): Promise<string[]> {
@@ -26,7 +27,7 @@ async function getStaticAssets(context: Context): Promise<string[]> {
     "icons/icon-48.png",
     "icons/icon-128.png",
     "pages/options.html",
-    "pages/serpinfo/options.html",
+    "pages/serpinfo-options.html",
     "pages/popup.html",
     ...(browser === "safari" ? ["scripts/import-content-script.js"] : []),
   ];
@@ -35,20 +36,24 @@ async function getStaticAssets(context: Context): Promise<string[]> {
 function getScripts(): string[] {
   return [
     "scripts/background.ts",
-    "scripts/options.tsx",
-    "scripts/serpinfo/content-script.ts",
-    "scripts/serpinfo/options.tsx",
-    "scripts/popup.tsx",
+    "scripts/options.ts",
+    "scripts/content-script.ts",
+    "scripts/serpinfo-options.ts",
+    "scripts/popup.ts",
   ];
 }
 
+function getModules(): string[] {
+  return ["scripts/block-dialog.ts"];
+}
+
 function getDefine(context: Context): Record<string, string> {
-  const { browser, version, debug } = context;
+  const { browser, debug, e2e } = context;
   const vars = {
     NODE_ENV: debug ? "development" : "production",
     BROWSER: browser,
-    VERSION: version,
     DEBUG: debug ? "true" : "false",
+    E2E: e2e ? "true" : "false",
     DROPBOX_API_KEY: process.env.DROPBOX_API_KEY ?? "<DROPBOX_API_KEY not set>",
     DROPBOX_API_SECRET:
       process.env.DROPBOX_API_SECRET ?? "<DROPBOX_API_SECRET not set>",
@@ -83,13 +88,17 @@ async function buildManifestJSON(context: Context) {
   );
 }
 
-async function buildScripts(context: Context): Promise<string[]> {
+async function runEsbuild(
+  context: Context,
+  entryPoints: readonly string[],
+  format: "iife" | "esm",
+): Promise<string[]> {
   const { debug, srcDir, destDir } = context;
   const { metafile } = await esbuild.build({
     bundle: true,
     define: getDefine(context),
-    entryPoints: getScripts().map((file) => path.join(srcDir, file)),
-    format: "iife",
+    entryPoints: entryPoints.map((file) => path.join(srcDir, file)),
+    format,
     jsx: "automatic",
     jsxDev: debug,
     loader: { ".svg": "text", ".yml": "text" },
@@ -102,18 +111,77 @@ async function buildScripts(context: Context): Promise<string[]> {
   return Object.keys(metafile.inputs);
 }
 
+// Returns the input paths.
+async function buildScripts(context: Context): Promise<string[]> {
+  const [scriptInputs, moduleInputs] = await Promise.all([
+    runEsbuild(context, getScripts(), "iife"),
+    runEsbuild(context, getModules(), "esm"),
+  ]);
+  return [...scriptInputs, ...moduleInputs];
+}
+
+// From the esbuild input paths, collects the root directory of each bundled
+// npm package, keyed by package name.
+function collectBundledPackages(
+  inputPaths: readonly string[],
+): Record<string, string> {
+  const packageDirs: Record<string, string> = {};
+  for (const inputPath of inputPaths) {
+    const segments = path.dirname(inputPath).split("/");
+    const nodeModulesIndex = segments.lastIndexOf("node_modules");
+    if (nodeModulesIndex === -1) {
+      continue;
+    }
+    const scopeOrName = segments[nodeModulesIndex + 1];
+    if (scopeOrName == null) {
+      continue;
+    }
+    const hasScope = scopeOrName.startsWith("@");
+    if (hasScope && segments[nodeModulesIndex + 2] == null) {
+      continue;
+    }
+    const nameEnd = nodeModulesIndex + (hasScope ? 3 : 2);
+    const name = segments.slice(nodeModulesIndex + 1, nameEnd).join("/");
+    packageDirs[name] = segments.slice(0, nameEnd).join("/");
+  }
+  return packageDirs;
+}
+
+async function readLicense(
+  name: string,
+  dir: string,
+  additionalLicensePaths: Readonly<Record<string, string>>,
+): Promise<string> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const entry = entries.find(
+    (entry) => entry.isFile() && /^licen[cs]e/i.test(entry.name),
+  );
+  const licensePath = entry
+    ? path.join(dir, entry.name)
+    : additionalLicensePaths[name];
+  if (licensePath == null) {
+    throw new Error(`No license file found for ${name}`);
+  }
+  return (await fs.readFile(licensePath, "utf-8")).trim();
+}
+
 async function buildThirdPartyNotices(
   context: Context,
-  paths: readonly string[],
+  inputPaths: readonly string[],
 ): Promise<void> {
-  const { destDir, licenseFallbackDir } = context;
-  const licenseTexts = await getLicenseTexts(paths, licenseFallbackDir);
-  const thirdPartyNotices = licenseTexts
-    .map(([name, licenseText]) => `${name}\n\n${licenseText}\n`)
-    .join("\n\n");
+  const { destDir, additionalLicensePaths } = context;
+  const packages = Object.entries(collectBundledPackages(inputPaths)).sort(
+    ([a], [b]) => (a < b ? -1 : a > b ? 1 : 0),
+  );
+  const notices = await Promise.all(
+    packages.map(async ([name, dir]) => {
+      const license = await readLicense(name, dir, additionalLicensePaths);
+      return `${name}\n\n${license}\n`;
+    }),
+  );
   await fse.outputFile(
     path.join(destDir, "third-party-notices.txt"),
-    thirdPartyNotices,
+    notices.join("\n\n"),
   );
 }
 
@@ -122,40 +190,41 @@ async function main() {
   const { values: args } = util.parseArgs({
     options: {
       browser: { type: "string", short: "b" },
-      version: { type: "string", short: "v" },
       debug: { type: "boolean", short: "d" },
+      e2e: { type: "boolean" },
       "no-key": { type: "boolean" },
     },
   });
   const {
     browser,
-    version,
     debug,
+    e2e,
     "no-key": noKey,
   } = z
     .object({
       browser: z
         .enum(["chrome", "edge", "firefox", "safari"])
         .default("chrome"),
-      version: z.string().default("0.1.0"),
       debug: z.boolean().default(false),
+      e2e: z.boolean().default(false),
       "no-key": z.boolean().default(false),
     })
     .parse(args);
   const context = {
     browser,
-    version,
+    version: pkg.version,
     debug,
+    e2e,
     noKey,
     srcDir: "src",
-    destDir: `dist/${browser}${debug ? "-debug" : ""}${noKey ? "-no-key" : ""}`,
-    licenseFallbackDir: "licenses",
+    destDir: `dist/${browser}${debug ? "-debug" : ""}${e2e ? "-e2e" : ""}${noKey ? "-no-key" : ""}`,
+    additionalLicensePaths: { "is-mobile": "third-party/is-mobile/LICENSE" },
   };
   await Promise.all([
     buildStaticAssets(context),
     buildManifestJSON(context),
-    buildScripts(context).then((paths) =>
-      buildThirdPartyNotices(context, paths),
+    buildScripts(context).then((inputPaths) =>
+      buildThirdPartyNotices(context, inputPaths),
     ),
   ]);
 }

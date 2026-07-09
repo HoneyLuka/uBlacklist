@@ -1,59 +1,51 @@
+import clsx from "clsx";
 import { useId, useMemo } from "react";
 import icon from "../../icons/icon.svg";
-import { browser } from "../browser.ts";
-import { Icon } from "../components/icon.tsx";
-import { Indent } from "../components/indent.tsx";
-import { Label, LabelWrapper, SubLabel } from "../components/label.tsx";
 import { Link } from "../components/link.tsx";
-import { Row, RowItem } from "../components/row.tsx";
-import {
-  Section,
-  SectionBody,
-  SectionHeader,
-  SectionItem,
-  SectionTitle,
-} from "../components/section.tsx";
-import { useClassName } from "../components/utilities.ts";
-import { getWebsiteURL, translate } from "../locales.ts";
-import { svgToDataURL } from "../utilities.ts";
+import svgIconStyles from "../components/svg-icon.module.css";
+import { SvgIcon } from "../components/svg-icon.tsx";
+import { browser } from "../shared/browser.ts";
+import { getWebsiteURL, translate } from "../shared/locales.ts";
+import labelStyles from "../styles/label.module.css";
+import rowStyles from "../styles/row.module.css";
+import sectionStyles from "../styles/section.module.css";
+import styles from "./about-section.module.css";
 
-export const AboutSection: React.FC<{ id: string }> = (props) => {
+export function AboutSection(props: { id: string }) {
   const id = useId();
   const version = useMemo(() => browser.runtime.getManifest().version, []);
   const thirdPartyNoticesURL = useMemo(
     () => browser.runtime.getURL("third-party-notices.txt"),
     [],
   );
-  const nameClassName = useClassName(
-    () => ({
-      fontSize: "1.5em",
-    }),
-    [],
-  );
   return (
-    <Section aria-labelledby={`${id}-title`} id={props.id}>
-      <SectionHeader>
-        <SectionTitle id={`${id}-title`}>
+    <section
+      className={sectionStyles.section}
+      aria-labelledby={`${id}-title`}
+      id={props.id}
+    >
+      <div className={sectionStyles.header}>
+        <h1 className={sectionStyles.title} id={`${id}-title`}>
           {translate("options_aboutTitle")}
-        </SectionTitle>
-      </SectionHeader>
-      <SectionBody>
-        <SectionItem>
-          <Row>
-            <RowItem>
-              <Indent depth={1.5}>
-                <Icon iconSize="36px" url={svgToDataURL(icon)} />
-              </Indent>
-            </RowItem>
-            <RowItem expanded>
-              <LabelWrapper>
-                <Label className={nameClassName}>
+        </h1>
+      </div>
+      <div className={sectionStyles.body}>
+        <div className={sectionStyles.item}>
+          <div className={rowStyles.row}>
+            <div className={rowStyles.rowItem}>
+              <div className={styles.iconIndent}>
+                <SvgIcon className={svgIconStyles.large} svg={icon} />
+              </div>
+            </div>
+            <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+              <div className={labelStyles.wrapper}>
+                <div className={clsx(labelStyles.label, styles.name)}>
                   {translate("extensionName")}
-                </Label>
-                <SubLabel>{`${translate(
+                </div>
+                <div className={labelStyles.subLabel}>{`${translate(
                   "options_aboutVersion",
-                )}: ${version}`}</SubLabel>
-                <SubLabel>
+                )}: ${version}`}</div>
+                <div className={labelStyles.subLabel}>
                   <Link href={getWebsiteURL("/docs")}>
                     {translate("options_aboutDocumentation")}
                   </Link>
@@ -69,12 +61,12 @@ export const AboutSection: React.FC<{ id: string }> = (props) => {
                   <Link href={thirdPartyNoticesURL}>
                     {translate("options_aboutThirdPartyNotices")}
                   </Link>
-                </SubLabel>
-              </LabelWrapper>
-            </RowItem>
-          </Row>
-        </SectionItem>
-      </SectionBody>
-    </Section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
-};
+}

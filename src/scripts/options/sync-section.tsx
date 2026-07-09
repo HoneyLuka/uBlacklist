@@ -1,51 +1,44 @@
+import { Button } from "@base-ui/react/button";
+import { Checkbox } from "@base-ui/react/checkbox";
+import { Input } from "@base-ui/react/input";
+import clsx from "clsx";
 import dayjs from "dayjs";
 import dayjsDuration from "dayjs/plugin/duration";
 import { useEffect, useId, useState } from "react";
-import { browser } from "../browser.ts";
-import { Button, LinkButton } from "../components/button.tsx";
-import { CheckBox } from "../components/checkbox.tsx";
-import { FOCUS_END_CLASS, FOCUS_START_CLASS } from "../components/constants.ts";
 import {
   Dialog,
   DialogBody,
   DialogFooter,
   DialogHeader,
-  type DialogProps,
   DialogTitle,
 } from "../components/dialog.tsx";
-import { Indent } from "../components/indent.tsx";
-import {
-  ControlLabel,
-  Label,
-  LabelWrapper,
-  SubLabel,
-} from "../components/label.tsx";
-import { List, ListItem } from "../components/list.tsx";
-import { Portal } from "../components/portal.tsx";
-import { Row, RowItem } from "../components/row.tsx";
-import {
-  Section,
-  SectionBody,
-  SectionHeader,
-  SectionItem,
-  SectionTitle,
-} from "../components/section.tsx";
-import { Text } from "../components/text.tsx";
-import { TextArea } from "../components/textarea.tsx";
-import { usePrevious } from "../components/utilities.ts";
-import "../dayjs-locales.ts";
-import { omit } from "es-toolkit";
-import { Input } from "../components/input.tsx";
-import { getWebsiteURL, translate } from "../locales.ts";
-import { addMessageListeners, sendMessage } from "../messages.ts";
-import { supportedClouds } from "../supported-clouds.ts";
-import type { MessageName0, SyncBackendId, SyncForce } from "../types.ts";
-import { AltURL, isErrorResult } from "../utilities.ts";
-import { FromNow } from "./from-now.tsx";
-import { useOptionsContext } from "./options-context.tsx";
-import { Select, SelectOption } from "./select.tsx";
-import { SetBooleanItem } from "./set-boolean-item.tsx";
-import { SetIntervalItem } from "./set-interval-item.tsx";
+import { browser } from "../shared/browser.ts";
+import buttonStyles from "../styles/button.module.css";
+import styles from "../styles/checkbox.module.css";
+import indentStyles from "../styles/indent.module.css";
+import inputStyles from "../styles/input.module.css";
+import labelStyles from "../styles/label.module.css";
+import listStyles from "../styles/list.module.css";
+import rowStyles from "../styles/row.module.css";
+import sectionStyles from "../styles/section.module.css";
+import textStyles from "../styles/text.module.css";
+import textareaStyles from "../styles/textarea.module.css";
+import "../shared/dayjs-locales.ts";
+import { Select, SelectOption } from "../components/select.tsx";
+import { getWebsiteURL, translate } from "../shared/locales.ts";
+import { addMessageListeners, sendMessage } from "../shared/messages.ts";
+import { storageStore } from "../shared/storage-store.ts";
+import { supportedClouds } from "../shared/supported-clouds.ts";
+import type {
+  MessageName0,
+  SyncBackendId,
+  SyncForce,
+} from "../shared/types.ts";
+import { isErrorResult } from "../shared/utilities.ts";
+import { FromNow } from "./shared/from-now.tsx";
+import { getOS } from "./shared/platform.ts";
+import { SetBooleanItem } from "./shared/set-boolean-item.tsx";
+import { SetIntervalItem } from "./shared/set-interval-item.tsx";
 
 dayjs.extend(dayjsDuration);
 
@@ -77,74 +70,44 @@ const messageNames: Record<
   },
 };
 
-const initialWebDAVParams = {
-  url: "",
-  urlValid: false,
-  username: "",
-  password: "",
-  path: "",
-};
-
-const TurnOnSyncDialog: React.FC<
-  {
-    setBackendId: (id: SyncBackendId | false | null) => void;
-  } & DialogProps
-> = ({ close, open, setBackendId }) => {
+function TurnOnSyncForm({ close }: { close: () => void }) {
   const id = useId();
-  const {
-    platformInfo: { os },
-  } = useOptionsContext();
-  const [state, setState] = useState({
-    phase: "none" as "none" | "auth" | "auth-alt" | "conn" | "conn-alt",
-    backendId: "googleDrive" as SyncBackendId,
-    useAltFlow: false,
-    authCode: "",
-    webDAVParams: initialWebDAVParams,
-    errorMessage: "",
-    initialForce: "none" as SyncForce,
-  });
-  const prevOpen = usePrevious(open);
-  if (open && !prevOpen) {
-    state.phase = "none";
-    state.backendId = "googleDrive";
-    state.useAltFlow = false;
-    state.authCode = "";
-    state.webDAVParams = initialWebDAVParams;
-    state.errorMessage = "";
-    state.initialForce = "none";
-  }
+  const [phase, setPhase] = useState<
+    "none" | "auth" | "auth-alt" | "conn" | "conn-alt"
+  >("none");
+  const [backendId, setBackendId] = useState<SyncBackendId>("googleDrive");
+  const [useAltFlow, setUseAltFlow] = useState(false);
+  const [authCode, setAuthCode] = useState("");
+  const [webDAVURL, setWebDAVURL] = useState("");
+  const [webDAVURLValid, setWebDAVURLValid] = useState(false);
+  const [webDAVUsername, setWebDAVUsername] = useState("");
+  const [webDAVPassword, setWebDAVPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [initialForce, setInitialForce] = useState<SyncForce>("none");
   const forceAltFlow =
-    state.backendId === "webdav" || state.backendId === "browserSync"
+    backendId === "webdav" || backendId === "browserSync"
       ? false
-      : supportedClouds[state.backendId].shouldUseAltFlow(os);
+      : supportedClouds[backendId].shouldUseAltFlow(getOS());
   const okButtonEnabled =
-    state.backendId === "webdav"
-      ? state.phase === "none" && state.webDAVParams.urlValid
-      : state.backendId === "browserSync"
-        ? true
-        : state.phase === "none" ||
-          (state.phase === "auth-alt" && state.authCode !== "");
+    backendId === "webdav"
+      ? phase === "none" && webDAVURLValid
+      : backendId === "browserSync"
+        ? phase === "none"
+        : phase === "none" || (phase === "auth-alt" && authCode !== "");
 
   return (
-    <Dialog aria-labelledby={`${id}-title`} close={close} open={open}>
+    <>
       <DialogHeader>
-        <DialogTitle id={`${id}-title`}>
-          {translate("options_turnOnSyncDialog_title")}
-        </DialogTitle>
+        <DialogTitle>{translate("options_turnOnSyncDialog_title")}</DialogTitle>
       </DialogHeader>
       <DialogBody>
-        <Row>
-          <RowItem>
+        <div className={rowStyles.row}>
+          <div className={rowStyles.rowItem}>
             <Select
-              className={state.phase === "none" ? FOCUS_START_CLASS : ""}
-              disabled={state.phase !== "none"}
-              value={state.backendId}
-              onChange={(e) => {
-                const { value } = e.currentTarget;
-                setState((s) => ({
-                  ...s,
-                  backendId: value as SyncBackendId,
-                }));
+              disabled={phase !== "none"}
+              value={backendId}
+              onValueChange={(value) => {
+                setBackendId(value as SyncBackendId);
               }}
             >
               <SelectOption value="googleDrive">
@@ -158,186 +121,200 @@ const TurnOnSyncDialog: React.FC<
               </SelectOption>
               {(process.env.BROWSER === "chrome" ||
                 process.env.BROWSER === "edge" ||
-                (process.env.BROWSER === "firefox" && os !== "android")) && (
+                (process.env.BROWSER === "firefox" &&
+                  getOS() !== "android")) && (
                 <SelectOption value="browserSync">
                   {translate(messageNames.browserSync.sync)}
                 </SelectOption>
               )}
             </Select>
-          </RowItem>
-        </Row>
-        <Row>
-          <RowItem expanded>
-            <Text>
-              {translate(messageNames[state.backendId].syncDescription)}
-            </Text>
-          </RowItem>
-        </Row>
-        {state.backendId === "webdav" ? (
+          </div>
+        </div>
+        <div className={rowStyles.row}>
+          <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+            <span className={textStyles.secondary}>
+              {translate(messageNames[backendId].syncDescription)}
+            </span>
+          </div>
+        </div>
+        {backendId === "webdav" ? (
           <>
-            <Row>
-              <RowItem expanded>
-                <LabelWrapper fullWidth>
-                  <ControlLabel for={`${id}-webdav-url`}>
+            <div className={rowStyles.row}>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div
+                  className={clsx(labelStyles.wrapper, labelStyles.fullWidth)}
+                >
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-webdav-url`}
+                  >
                     {translate("clouds_webdavUrlLabel")}
-                  </ControlLabel>
-                  <SubLabel>
+                  </label>
+                  <div className={labelStyles.subLabel}>
                     {translate("clouds_webdavUrlDescription")}
-                  </SubLabel>
-                </LabelWrapper>
+                  </div>
+                </div>
                 <Input
-                  disabled={state.phase !== "none"}
+                  className={inputStyles.input}
+                  disabled={phase !== "none"}
                   id={`${id}-webdav-url`}
                   pattern="https?:.*"
                   placeholder="https://example.com/webdav/"
                   type="url"
-                  value={state.webDAVParams.url}
+                  value={webDAVURL}
                   onChange={(e) => {
                     const {
                       value,
                       validity: { valid },
                     } = e.currentTarget;
-                    setState((s) => ({
-                      ...s,
-                      webDAVParams: {
-                        ...s.webDAVParams,
-                        url: value,
-                        urlValid: valid,
-                      },
-                    }));
+                    setWebDAVURL(value);
+                    setWebDAVURLValid(valid);
                   }}
                 />
-              </RowItem>
-            </Row>
-            <Row>
-              <RowItem expanded>
-                <LabelWrapper fullWidth>
-                  <ControlLabel for={`${id}-webdav-username`}>
+              </div>
+            </div>
+            <div className={rowStyles.row}>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div
+                  className={clsx(labelStyles.wrapper, labelStyles.fullWidth)}
+                >
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-webdav-username`}
+                  >
                     {translate("clouds_webdavUsernameLabel")}
-                  </ControlLabel>
-                </LabelWrapper>
+                  </label>
+                </div>
                 <Input
-                  disabled={state.phase !== "none"}
+                  className={inputStyles.input}
+                  disabled={phase !== "none"}
                   id={`${id}-webdav-username`}
-                  value={state.webDAVParams.username}
+                  value={webDAVUsername}
                   onChange={(e) => {
-                    const { value } = e.currentTarget;
-                    setState((s) => ({
-                      ...s,
-                      webDAVParams: { ...s.webDAVParams, username: value },
-                    }));
+                    setWebDAVUsername(e.currentTarget.value);
                   }}
                 />
-              </RowItem>
-            </Row>
-            <Row>
-              <RowItem expanded>
-                <LabelWrapper fullWidth>
-                  <ControlLabel for={`${id}-webdav-password`}>
+              </div>
+            </div>
+            <div className={rowStyles.row}>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div
+                  className={clsx(labelStyles.wrapper, labelStyles.fullWidth)}
+                >
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-webdav-password`}
+                  >
                     {translate("clouds_webdavPasswordLabel")}
-                  </ControlLabel>
-                </LabelWrapper>
+                  </label>
+                </div>
                 <Input
-                  disabled={state.phase !== "none"}
+                  className={inputStyles.input}
+                  disabled={phase !== "none"}
                   id={`${id}-webdav-password`}
                   type="password"
-                  value={state.webDAVParams.password}
+                  value={webDAVPassword}
                   onChange={(e) => {
-                    const { value } = e.currentTarget;
-                    setState((s) => ({
-                      ...s,
-                      webDAVParams: { ...s.webDAVParams, password: value },
-                    }));
+                    setWebDAVPassword(e.currentTarget.value);
                   }}
                 />
-              </RowItem>
-            </Row>
+              </div>
+            </div>
           </>
-        ) : state.backendId === "browserSync" ? null : (
+        ) : backendId === "browserSync" ? null : (
           <>
-            <Row>
-              <RowItem>
-                <Indent>
-                  <CheckBox
-                    checked={forceAltFlow || state.useAltFlow}
-                    disabled={state.phase !== "none" || forceAltFlow}
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Checkbox.Root
+                    checked={forceAltFlow || useAltFlow}
+                    className={styles.checkbox}
+                    disabled={phase !== "none" || forceAltFlow}
                     id={`${id}-use-alt-flow`}
-                    onChange={(e) => {
-                      const { checked } = e.currentTarget;
-                      setState((s) => ({
-                        ...s,
-                        useAltFlow: checked,
-                      }));
-                    }}
-                  />
-                </Indent>
-              </RowItem>
-              <RowItem expanded>
-                <LabelWrapper disabled={state.phase !== "none" || forceAltFlow}>
-                  <ControlLabel for={`${id}-use-alt-flow`}>
+                    onCheckedChange={setUseAltFlow}
+                  >
+                    <Checkbox.Indicator className={styles.indicator} />
+                  </Checkbox.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div
+                  className={clsx(
+                    labelStyles.wrapper,
+                    (phase !== "none" || forceAltFlow) && labelStyles.disabled,
+                  )}
+                >
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-use-alt-flow`}
+                  >
                     {translate("options_turnOnSyncDialog_useAltFlow")}
-                  </ControlLabel>
-                </LabelWrapper>
-              </RowItem>
-            </Row>
-            {(forceAltFlow || state.useAltFlow) && (
-              <Row>
-                <RowItem expanded>
-                  <Text>
+                  </label>
+                </div>
+              </div>
+            </div>
+            {(forceAltFlow || useAltFlow) && (
+              <div className={rowStyles.row}>
+                <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                  <span className={textStyles.secondary}>
                     {translate(
                       "options_turnOnSyncDialog_altFlowDescription",
-                      new AltURL(altFlowRedirectURL).host,
+                      new URL(altFlowRedirectURL).hostname,
                     )}
-                  </Text>
-                </RowItem>
-              </Row>
+                  </span>
+                </div>
+              </div>
             )}
-            {(state.phase === "auth-alt" || state.phase === "conn-alt") && (
-              <Row>
-                <RowItem expanded>
-                  <LabelWrapper fullWidth>
-                    <ControlLabel for={`${id}-auth-code`}>
+            {(phase === "auth-alt" || phase === "conn-alt") && (
+              <div className={rowStyles.row}>
+                <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                  <div
+                    className={clsx(labelStyles.wrapper, labelStyles.fullWidth)}
+                  >
+                    <label
+                      className={labelStyles.controlLabel}
+                      htmlFor={`${id}-auth-code`}
+                    >
                       {translate(
                         "options_turnOnSyncDialog_altFlowAuthCodeLabel",
                       )}
-                    </ControlLabel>
-                  </LabelWrapper>
-                  <TextArea
-                    breakAll
-                    className={
-                      state.phase === "auth-alt" ? FOCUS_START_CLASS : ""
-                    }
-                    disabled={state.phase !== "auth-alt"}
+                    </label>
+                  </div>
+                  <textarea
+                    className={clsx(
+                      textareaStyles.textArea,
+                      textareaStyles.breakAll,
+                    )}
+                    disabled={phase !== "auth-alt"}
                     id={`${id}-auth-code`}
                     rows={2}
-                    value={state.authCode}
+                    style={{ height: "calc(1.5em * 2 + 1em + 2px)" }}
+                    value={authCode}
                     onChange={(e) => {
-                      const { value } = e.currentTarget;
-                      setState((s) => ({ ...s, authCode: value }));
+                      setAuthCode(e.currentTarget.value);
                     }}
                   />
-                </RowItem>
-              </Row>
+                </div>
+              </div>
             )}
           </>
         )}
-        <Row>
-          <RowItem expanded>
-            <LabelWrapper fullWidth>
-              <ControlLabel for={`${id}-initial-direction`}>
+        <div className={rowStyles.row}>
+          <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+            <div className={clsx(labelStyles.wrapper, labelStyles.fullWidth)}>
+              <label
+                className={labelStyles.controlLabel}
+                htmlFor={`${id}-initial-direction`}
+              >
                 {translate("options_turnOnSyncDialog_initialSyncLabel")}
-              </ControlLabel>
-            </LabelWrapper>
+              </label>
+            </div>
             <Select
-              disabled={state.phase !== "none"}
+              disabled={phase !== "none"}
               id={`${id}-initial-direction`}
-              value={state.initialForce}
-              onChange={(e) => {
-                const { value } = e.currentTarget;
-                setState((s) => ({
-                  ...s,
-                  initialForce: value as SyncForce,
-                }));
+              value={initialForce}
+              onValueChange={(value) => {
+                setInitialForce(value as SyncForce);
               }}
             >
               <SelectOption value="none">
@@ -350,44 +327,38 @@ const TurnOnSyncDialog: React.FC<
                 {translate("options_turnOnSyncDialog_initialSyncUseRemote")}
               </SelectOption>
             </Select>
-          </RowItem>
-        </Row>
+          </div>
+        </div>
       </DialogBody>
       <DialogFooter>
-        <Row>
-          <RowItem expanded>
-            {state.errorMessage && (
-              <Text>{translate("error", state.errorMessage)}</Text>
+        <div className={rowStyles.row}>
+          <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+            {errorMessage && (
+              <span className={textStyles.secondary}>
+                {translate("error", errorMessage)}
+              </span>
             )}
-          </RowItem>
-          <RowItem>
+          </div>
+          <div className={rowStyles.rowItem}>
             <Button
-              className={
-                state.phase === "auth" ||
-                state.phase === "conn" ||
-                state.phase === "conn-alt"
-                  ? `${FOCUS_START_CLASS} ${FOCUS_END_CLASS}`
-                  : okButtonEnabled
-                    ? ""
-                    : FOCUS_END_CLASS
-              }
+              className={clsx(buttonStyles.button, buttonStyles.secondary)}
               onClick={close}
             >
               {translate("cancelButton")}
             </Button>
-          </RowItem>
-          <RowItem>
+          </div>
+          <div className={rowStyles.rowItem}>
             <Button
-              className={okButtonEnabled ? FOCUS_END_CLASS : ""}
+              className={clsx(buttonStyles.button, buttonStyles.primary)}
               disabled={!okButtonEnabled}
-              primary
               onClick={() => {
                 void (async () => {
-                  if (state.backendId === "webdav") {
-                    // state.phase === "none"
+                  if (backendId === "webdav") {
+                    // phase === "none"
                     try {
+                      const u = new URL(webDAVURL);
                       const origins = [
-                        new AltURL(state.webDAVParams.url).toString(),
+                        `${u.protocol}//${u.hostname}${u.pathname}${u.search}`,
                       ];
                       const granted = await browser.permissions.request({
                         origins,
@@ -398,65 +369,62 @@ const TurnOnSyncDialog: React.FC<
                     } catch {
                       return;
                     }
-                    setState((s) => ({ ...s, phase: "conn" }));
+                    setPhase("conn");
                     try {
                       const error = await sendMessage(
                         "connect-to-webdav",
-                        omit(state.webDAVParams, ["urlValid"]),
-                        state.initialForce,
+                        {
+                          url: webDAVURL,
+                          username: webDAVUsername,
+                          password: webDAVPassword,
+                          path: "",
+                        },
+                        initialForce,
                       );
                       if (error) {
-                        setState((s) => ({
-                          ...s,
-                          errorMessage: error.message,
-                        }));
+                        setErrorMessage(error.message);
                         return;
                       }
                     } catch {
                       return;
                     } finally {
-                      setState((s) => ({ ...s, phase: "none" }));
+                      setPhase("none");
                     }
-                    setBackendId("webdav");
                     close();
                     return;
                   }
-                  if (state.backendId === "browserSync") {
+                  if (backendId === "browserSync") {
+                    setPhase("conn");
                     try {
                       const error = await sendMessage(
                         "connect-to-browser-sync",
-                        state.initialForce,
+                        initialForce,
                       );
                       if (error) {
-                        setState((s) => ({
-                          ...s,
-                          errorMessage: error.message,
-                        }));
+                        setErrorMessage(error.message);
                         return;
                       }
                     } catch {
                       return;
+                    } finally {
+                      setPhase("none");
                     }
-                    setBackendId("browserSync");
                     close();
                     return;
                   }
-                  const selectedCloud = supportedClouds[state.backendId];
-                  let useAltFlow: boolean;
-                  let authCode: string;
-                  if (state.phase === "auth-alt") {
-                    useAltFlow = true;
-                    authCode = state.authCode;
+                  const selectedCloud = supportedClouds[backendId];
+                  let altFlow: boolean;
+                  let authorizationCode: string;
+                  if (phase === "auth-alt") {
+                    altFlow = true;
+                    authorizationCode = authCode;
                   } else {
-                    useAltFlow = forceAltFlow || state.useAltFlow;
-                    setState((s) => ({
-                      ...s,
-                      phase: useAltFlow ? "auth-alt" : "auth",
-                    }));
+                    altFlow = forceAltFlow || useAltFlow;
+                    setPhase(altFlow ? "auth-alt" : "auth");
                     try {
                       const origins = [
                         ...selectedCloud.hostPermissions,
-                        ...(useAltFlow ? [altFlowRedirectURL] : []),
+                        ...(altFlow ? [altFlowRedirectURL] : []),
                       ];
                       const granted = await browser.permissions.request({
                         origins,
@@ -464,82 +432,99 @@ const TurnOnSyncDialog: React.FC<
                       if (!granted) {
                         return;
                       }
-                      authCode = (await selectedCloud.authorize(useAltFlow))
-                        .authorizationCode;
+                      authorizationCode = (
+                        await selectedCloud.authorize(altFlow)
+                      ).authorizationCode;
                     } catch {
-                      setState((s) => ({ ...s, phase: "none" }));
+                      setPhase("none");
                       return;
                     }
                   }
-                  setState((s) => ({
-                    ...s,
-                    phase: useAltFlow ? "conn-alt" : "conn",
-                  }));
+                  setPhase(altFlow ? "conn-alt" : "conn");
                   try {
                     const error = await sendMessage(
                       "connect-to-cloud",
-                      state.backendId,
-                      authCode,
-                      useAltFlow,
-                      state.initialForce,
+                      backendId,
+                      authorizationCode,
+                      altFlow,
+                      initialForce,
                     );
                     if (error) {
-                      setState((s) => ({ ...s, errorMessage: error.message }));
+                      setErrorMessage(error.message);
                       return;
                     }
                   } catch {
                     return;
                   } finally {
-                    setState((s) => ({ ...s, phase: "none" }));
+                    setPhase("none");
                   }
-                  setBackendId(state.backendId);
                   close();
                 })();
               }}
             >
               {translate("options_turnOnSyncDialog_turnOnSyncButton")}
             </Button>
-          </RowItem>
-        </Row>
+          </div>
+        </div>
       </DialogFooter>
+    </>
+  );
+}
+
+function TurnOnSyncDialog({
+  close,
+  open,
+}: {
+  close: () => void;
+  open: boolean;
+}) {
+  return (
+    <Dialog close={close} open={open}>
+      <TurnOnSyncForm close={close} />
     </Dialog>
   );
-};
+}
 
-const TurnOnSync: React.FC<{
+function TurnOnSync({
+  backendId,
+}: {
   backendId: SyncBackendId | false | null;
-  setBackendId: (id: SyncBackendId | false | null) => void;
-}> = ({ backendId, setBackendId }) => {
-  const id = useId();
+}) {
   const [turnOnSyncDialogOpen, setTurnOnSyncDialogOpen] = useState(false);
   return (
-    <SectionItem>
-      <Row>
-        <RowItem expanded>
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
           {backendId ? (
-            <LabelWrapper>
-              <Label>{translate(messageNames[backendId].syncTurnedOn)}</Label>
-            </LabelWrapper>
+            <div className={labelStyles.wrapper}>
+              <div className={labelStyles.label}>
+                {translate(messageNames[backendId].syncTurnedOn)}
+              </div>
+            </div>
           ) : (
-            <LabelWrapper>
-              <Label>{translate("options_syncFeature")}</Label>
-              <SubLabel>{translate("options_syncFeatureDescription")}</SubLabel>
-            </LabelWrapper>
+            <div className={labelStyles.wrapper}>
+              <div className={labelStyles.label}>
+                {translate("options_syncFeature")}
+              </div>
+              <div className={labelStyles.subLabel}>
+                {translate("options_syncFeatureDescription")}
+              </div>
+            </div>
           )}
-        </RowItem>
-        <RowItem>
+        </div>
+        <div className={rowStyles.rowItem}>
           {backendId ? (
             <Button
+              className={clsx(buttonStyles.button, buttonStyles.secondary)}
               onClick={() => {
-                void sendMessage("disconnect-from-cloud");
-                setBackendId(false);
+                void sendMessage("disconnect-from-sync-backend");
               }}
             >
               {translate("options_turnOffSync")}
             </Button>
           ) : (
             <Button
-              primary
+              className={clsx(buttonStyles.button, buttonStyles.primary)}
               onClick={() => {
                 setTurnOnSyncDialogOpen(true);
               }}
@@ -547,27 +532,18 @@ const TurnOnSync: React.FC<{
               {translate("options_turnOnSync")}
             </Button>
           )}
-        </RowItem>
-      </Row>
-      <Portal id={`${id}-portal`}>
-        <TurnOnSyncDialog
-          close={() => setTurnOnSyncDialogOpen(false)}
-          open={turnOnSyncDialogOpen}
-          setBackendId={setBackendId}
-        />
-      </Portal>
-    </SectionItem>
+        </div>
+      </div>
+      <TurnOnSyncDialog
+        close={() => setTurnOnSyncDialogOpen(false)}
+        open={turnOnSyncDialogOpen}
+      />
+    </div>
   );
-};
+}
 
-const SyncNow: React.FC<{ backendId: SyncBackendId | false | null }> = (
-  props,
-) => {
-  const {
-    initialItems: { syncResult: initialSyncResult },
-  } = useOptionsContext();
-  const [syncResult, setSyncResult] = useState(initialSyncResult);
-  const [updated, setUpdated] = useState(false);
+function SyncNow(props: { backendId: SyncBackendId | false | null }) {
+  const syncResult = storageStore.use.syncResult();
   const [syncing, setSyncing] = useState(false);
   useEffect(
     () =>
@@ -576,27 +552,26 @@ const SyncNow: React.FC<{ backendId: SyncBackendId | false | null }> = (
           if (id !== props.backendId) {
             return;
           }
-          setUpdated(false);
           setSyncing(true);
         },
-        synced: (id, result, updated) => {
+        synced: (id) => {
           if (id !== props.backendId) {
             return;
           }
-          setSyncResult(result);
-          setUpdated(updated);
           setSyncing(false);
         },
       }),
     [props.backendId],
   );
   return (
-    <SectionItem>
-      <Row>
-        <RowItem expanded>
-          <LabelWrapper>
-            <Label>{translate("options_syncResult")}</Label>
-            <SubLabel>
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <div className={labelStyles.wrapper}>
+            <div className={labelStyles.label}>
+              {translate("options_syncResult")}
+            </div>
+            <div className={labelStyles.subLabel}>
               {syncing ? (
                 translate("options_syncRunning")
               ) : !props.backendId || !syncResult ? (
@@ -606,23 +581,12 @@ const SyncNow: React.FC<{ backendId: SyncBackendId | false | null }> = (
               ) : (
                 <FromNow time={dayjs(syncResult.timestamp)} />
               )}
-              {updated ? (
-                <>
-                  {" "}
-                  <LinkButton
-                    onClick={() => {
-                      window.location.reload();
-                    }}
-                  >
-                    {translate("options_syncReloadButton")}
-                  </LinkButton>
-                </>
-              ) : null}
-            </SubLabel>
-          </LabelWrapper>
-        </RowItem>
-        <RowItem>
+            </div>
+          </div>
+        </div>
+        <div className={rowStyles.rowItem}>
           <Button
+            className={clsx(buttonStyles.button, buttonStyles.secondary)}
             disabled={syncing || !props.backendId}
             onClick={() => {
               void sendMessage("sync");
@@ -630,89 +594,94 @@ const SyncNow: React.FC<{ backendId: SyncBackendId | false | null }> = (
           >
             {translate("options_syncNowButton")}
           </Button>
-        </RowItem>
-      </Row>
-    </SectionItem>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
-const SyncCategories: React.FC = () => (
-  <SectionItem>
-    <Row>
-      <RowItem expanded>
-        <LabelWrapper>
-          <Label>{translate("options_syncCategories")}</Label>
-        </LabelWrapper>
-      </RowItem>
-    </Row>
-    <Row>
-      <RowItem>
-        <Indent />
-      </RowItem>
-      <RowItem expanded>
-        <List>
-          <ListItem>
-            <SetBooleanItem
-              itemKey="syncBlocklist"
-              label={translate("options_syncBlocklist")}
-            />
-          </ListItem>
-          <ListItem>
-            <SetBooleanItem
-              itemKey="syncGeneral"
-              label={translate("options_syncGeneral")}
-            />
-          </ListItem>
-          <ListItem>
-            <SetBooleanItem
-              itemKey="syncAppearance"
-              label={translate("options_syncAppearance")}
-            />
-          </ListItem>
-          <ListItem>
-            <SetBooleanItem
-              itemKey="syncSubscriptions"
-              label={translate("options_syncSubscriptions")}
-            />
-          </ListItem>
-          <ListItem>
-            <SetBooleanItem
-              itemKey="syncSerpInfo"
-              label={translate("options_syncSerpInfo")}
-            />
-          </ListItem>
-        </List>
-      </RowItem>
-    </Row>
-  </SectionItem>
-);
-
-export const SyncSection: React.FC<{ id: string }> = (props) => {
-  const id = useId();
-  const {
-    initialItems: { syncCloudId: initialBackendId },
-  } = useOptionsContext();
-  const [backendId, setBackendId] = useState(initialBackendId);
+function SyncCategories() {
   return (
-    <Section aria-labelledby={`${id}-title`} id={props.id}>
-      <SectionHeader>
-        <SectionTitle id={`${id}-title`}>
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <div className={labelStyles.wrapper}>
+            <div className={labelStyles.label}>
+              {translate("options_syncCategories")}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={rowStyles.row}>
+        <div className={rowStyles.rowItem}>
+          <div className={indentStyles.indent} />
+        </div>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <ul className={listStyles.list}>
+            <li className={listStyles.item}>
+              <SetBooleanItem
+                itemKey="syncBlocklist"
+                label={translate("options_syncBlocklist")}
+              />
+            </li>
+            <li className={listStyles.item}>
+              <SetBooleanItem
+                itemKey="syncGeneral"
+                label={translate("options_syncGeneral")}
+              />
+            </li>
+            <li className={listStyles.item}>
+              <SetBooleanItem
+                itemKey="syncAppearance"
+                label={translate("options_syncAppearance")}
+              />
+            </li>
+            <li className={listStyles.item}>
+              <SetBooleanItem
+                itemKey="syncSubscriptions"
+                label={translate("options_syncSubscriptions")}
+              />
+            </li>
+            <li className={listStyles.item}>
+              <SetBooleanItem
+                itemKey="syncSerpInfo"
+                label={translate("options_syncSerpInfo")}
+              />
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SyncSection(props: { id: string }) {
+  const id = useId();
+  const backendId = storageStore.use.syncCloudId();
+  return (
+    <section
+      className={sectionStyles.section}
+      aria-labelledby={`${id}-title`}
+      id={props.id}
+    >
+      <div className={sectionStyles.header}>
+        <h1 className={sectionStyles.title} id={`${id}-title`}>
           {translate("options_syncTitle")}
-        </SectionTitle>
-      </SectionHeader>
-      <SectionBody>
-        <TurnOnSync backendId={backendId} setBackendId={setBackendId} />
+        </h1>
+      </div>
+      <div className={sectionStyles.body}>
+        <TurnOnSync backendId={backendId} />
         <SyncNow backendId={backendId} />
         <SyncCategories />
-        <SectionItem>
+        <div className={sectionStyles.item}>
           <SetIntervalItem
-            disabled={!backendId}
             itemKey="syncInterval"
-            label={translate("options_syncInterval")}
-            valueOptions={[5, 10, 15, 30, 60, 120]}
+            label={translate("options_syncIntervalInMinutes")}
+            min={5}
+            unit="minute"
           />
-        </SectionItem>
-      </SectionBody>
-    </Section>
+        </div>
+      </div>
+    </section>
   );
-};
+}

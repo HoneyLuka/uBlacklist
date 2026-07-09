@@ -1,43 +1,21 @@
-import React from "react";
-import { applyClassName } from "./helpers.tsx";
-import { useClassName } from "./utilities.ts";
+import clsx from "clsx";
+import type React from "react";
+import styles from "./link.module.css";
 
-export type LinkProps = React.JSX.IntrinsicElements["a"] & {
-  disabled?: boolean;
-};
+export type LinkProps = React.JSX.IntrinsicElements["a"];
 
-export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  function Link({ disabled = false, ...props }, ref) {
-    const className = useClassName(
-      (theme) => ({
-        color: theme.link.text,
-        outline: "none",
-        textDecoration: "none",
-        "&:focus": {
-          boxShadow: `0 0 0 2px ${theme.focus.shadow}`,
-        },
-        "&:focus:not(:focus-visible)": {
-          boxShadow: "none",
-        },
-        "&:focus:not(:-moz-focusring)": {
-          boxShadow: "none",
-        },
-      }),
-      [],
-    );
-    return (
-      <a
-        {...applyClassName(props, className)}
-        {...(disabled ? {} : { href: props.href })}
-        ref={ref}
-        rel="noopener noreferrer"
-        target="_blank"
-      />
-    );
-  },
-);
+export function Link({ className, ...props }: LinkProps) {
+  return (
+    <a
+      {...props}
+      className={clsx(styles.link, className)}
+      rel="noopener noreferrer"
+      target="_blank"
+    />
+  );
+}
 
-export function expandLinks(text: string, disabled = false): React.ReactNode {
+export function expandLinks(text: string): React.ReactNode {
   const children: React.ReactNode[] = [];
   const split = text.split(/\[([^\]]*)]\(([^)]*)\)/g);
   for (let i = 0; i < split.length; ++i) {
@@ -45,7 +23,7 @@ export function expandLinks(text: string, disabled = false): React.ReactNode {
       children.push(split[i]);
     } else if (i % 3 === 1) {
       children.push(
-        <Link disabled={disabled} href={split[i + 1]} key={i}>
+        <Link href={split[i + 1]} key={i}>
           {split[i]}
         </Link>,
       );

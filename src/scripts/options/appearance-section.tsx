@@ -1,362 +1,365 @@
+import { Radio } from "@base-ui/react/radio";
+import { RadioGroup } from "@base-ui/react/radio-group";
 import removeIcon from "@mdi/svg/svg/delete.svg";
 import addIcon from "@mdi/svg/svg/plus.svg";
+import clsx from "clsx";
+import { isEqual } from "es-toolkit";
 import { useId, useRef, useState } from "react";
 import { ColorPicker } from "../components/color-picker.tsx";
-import { IconButton } from "../components/icon-button.tsx";
-import { Indent } from "../components/indent.tsx";
+import { SvgIcon } from "../components/svg-icon.tsx";
 import {
-  ControlLabel,
-  Label,
-  LabelWrapper,
-  SubLabel,
-} from "../components/label.tsx";
-import { List, ListItem } from "../components/list.tsx";
-import { RadioButton } from "../components/radio-button.tsx";
-import { Row, RowItem } from "../components/row.tsx";
-import {
-  Section,
-  SectionBody,
-  SectionHeader,
-  SectionItem,
-  SectionTitle,
-} from "../components/section.tsx";
-import { useClassName } from "../components/utilities.ts";
-import { defaultBlockColor, defaultHighlightColor } from "../constants.ts";
-import { saveToLocalStorage } from "../local-storage.ts";
-import { translate } from "../locales.ts";
-import { svgToDataURL } from "../utilities.ts";
-import { useOptionsContext } from "./options-context.tsx";
+  defaultBlockColor,
+  defaultHighlightColor,
+} from "../shared/constants.ts";
+import { saveToLocalStorage } from "../shared/local-storage.ts";
+import { translate } from "../shared/locales.ts";
+import { storageStore } from "../shared/storage-store.ts";
+import iconButtonStyles from "../styles/icon-button.module.css";
+import indentStyles from "../styles/indent.module.css";
+import labelStyles from "../styles/label.module.css";
+import listStyles from "../styles/list.module.css";
+import styles from "../styles/radio.module.css";
+import rowStyles from "../styles/row.module.css";
+import sectionStyles from "../styles/section.module.css";
+import localStyles from "./appearance-section.module.css";
+import { saveSource } from "./shared/save-source.ts";
 
-type ColorItemKey = "linkColor" | "blockColor";
+function SetBlockColor() {
+  const id = useId();
+  const stored = storageStore.use.blockColor();
+  const [draft, setDraft] = useState(stored);
+  const pending = useRef(false);
+  if (pending.current) {
+    if (stored === draft) {
+      pending.current = false;
+    }
+  } else if (stored !== draft) {
+    setDraft(stored);
+  }
 
-const SetColorItem: React.FC<{
-  initialColor: string;
-  itemKey: ColorItemKey;
-  label: string;
-}> = ({ initialColor, itemKey, label }) => {
-  const {
-    initialItems: { [itemKey]: initialItem },
-  } = useOptionsContext();
-  const [specifyColor, setSpecifyColor] = useState(initialItem !== "default");
-  const [color, setColor] = useState(
-    initialItem === "default" ? initialColor : initialItem,
-  );
+  const save = (value: string) => {
+    pending.current = true;
+    setDraft(value);
+    void saveToLocalStorage({ blockColor: value }, saveSource);
+  };
+
+  const color = draft === "default" ? defaultBlockColor : draft;
 
   return (
-    <SectionItem>
-      <Row>
-        <RowItem expanded>
-          <LabelWrapper>
-            <Label>{label}</Label>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent>
-            <RadioButton
-              checked={!specifyColor}
-              id={`${itemKey}UseDefault`}
-              name={itemKey}
-              onChange={(e) => {
-                if (e.currentTarget.checked) {
-                  setSpecifyColor(false);
-                  void saveToLocalStorage(
-                    { [itemKey]: "default" } as Partial<
-                      Record<ColorItemKey, string>
-                    >,
-                    "options",
-                  );
-                }
-              }}
-            />
-          </Indent>
-        </RowItem>
-        <RowItem expanded>
-          <LabelWrapper>
-            <ControlLabel for={`${itemKey}UseDefault`}>
-              {translate("options_colorUseDefault")}
-            </ControlLabel>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent>
-            <RadioButton
-              checked={specifyColor}
-              id={`${itemKey}Specify`}
-              name={itemKey}
-              onChange={(e) => {
-                if (e.currentTarget.checked) {
-                  setSpecifyColor(true);
-                  void saveToLocalStorage(
-                    { [itemKey]: color } as Partial<
-                      Record<ColorItemKey, string>
-                    >,
-                    "options",
-                  );
-                }
-              }}
-            />
-          </Indent>
-        </RowItem>
-        <RowItem expanded>
-          <LabelWrapper>
-            <ControlLabel for={`${itemKey}Specify`}>
-              {translate("options_colorSpecify")}
-            </ControlLabel>
-          </LabelWrapper>
-        </RowItem>
-        <RowItem>
-          <ColorPicker
-            aria-label={label}
-            value={color}
-            onChange={(value) => {
-              setSpecifyColor(true);
-              setColor(value);
-              void saveToLocalStorage(
-                { [itemKey]: value } as Partial<Record<ColorItemKey, string>>,
-                "options",
-              );
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <div className={labelStyles.wrapper}>
+            <div className={labelStyles.label}>
+              {translate("options_blockColor")}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <RadioGroup
+            value={draft === "default" ? "default" : "specify"}
+            onValueChange={(value) => {
+              save(value === "specify" ? color : "default");
             }}
-          />
-        </RowItem>
-      </Row>
-    </SectionItem>
+          >
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Radio.Root
+                    className={styles.radio}
+                    id={`${id}-default`}
+                    value="default"
+                  >
+                    <Radio.Indicator className={styles.indicator} />
+                  </Radio.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div className={labelStyles.wrapper}>
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-default`}
+                  >
+                    {translate("options_colorUseDefault")}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Radio.Root
+                    className={styles.radio}
+                    id={`${id}-specify`}
+                    value="specify"
+                  >
+                    <Radio.Indicator className={styles.indicator} />
+                  </Radio.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div className={labelStyles.wrapper}>
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-specify`}
+                  >
+                    {translate("options_colorSpecify")}
+                  </label>
+                </div>
+              </div>
+              <div className={rowStyles.rowItem}>
+                <ColorPicker
+                  aria-label={translate("options_blockColor")}
+                  value={color}
+                  onChange={save}
+                />
+              </div>
+            </div>
+          </RadioGroup>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
-const SetHighlightColors: React.FC = () => {
-  const {
-    initialItems: { highlightColors: initialHighlightColors },
-  } = useOptionsContext();
-  const [colorsAndKeys, setColorsAndKeys] = useState(
-    initialHighlightColors.map((color, index) => [color, index] as const),
+function SetHighlightColors() {
+  const id = useId();
+  const storedColors = storageStore.use.highlightColors();
+  const [draft, setDraft] = useState(() =>
+    storedColors.map((color, index) => ({ color, key: index })),
   );
-  const nextKey = useRef(initialHighlightColors.length);
+  const nextKey = useRef(storedColors.length);
+  const pending = useRef(false);
+  const draftColors = draft.map((item) => item.color);
+  if (pending.current) {
+    if (isEqual(storedColors, draftColors)) {
+      pending.current = false;
+    }
+  } else if (!isEqual(storedColors, draftColors)) {
+    setDraft(storedColors.map((color) => ({ color, key: nextKey.current++ })));
+  }
 
-  const spacerClass = useClassName(
-    () => ({
-      height: "36px",
-      width: "36px",
-    }),
-    [],
-  );
+  const save = (next: { color: string; key: number }[]) => {
+    pending.current = true;
+    setDraft(next);
+    void saveToLocalStorage(
+      { highlightColors: next.map((item) => item.color) },
+      saveSource,
+    );
+  };
 
   return (
-    <SectionItem>
-      <Row>
-        <RowItem expanded>
-          <LabelWrapper>
-            <Label>{translate("options_highlightColors")}</Label>
-            <SubLabel>{translate("options_highlightDescription")}</SubLabel>
-            <SubLabel>
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <div className={labelStyles.wrapper}>
+            <div className={labelStyles.label}>
+              {translate("options_highlightColors")}
+            </div>
+            <div className={labelStyles.subLabel}>
+              {translate("options_highlightDescription")}
+            </div>
+            <div className={labelStyles.subLabel}>
               {translate("options_blacklistExample", "@1*://*.example.com/*")}
-            </SubLabel>
-          </LabelWrapper>
-        </RowItem>
-        <RowItem>
-          <IconButton
+            </div>
+          </div>
+        </div>
+        <div className={rowStyles.rowItem}>
+          <button
+            className={iconButtonStyles.button}
+            type="button"
             aria-label={translate("options_highlightColorAdd")}
-            iconURL={svgToDataURL(addIcon)}
             onClick={() => {
-              colorsAndKeys.push([defaultHighlightColor, nextKey.current++]);
-              setColorsAndKeys([...colorsAndKeys]);
-              void saveToLocalStorage(
-                { highlightColors: colorsAndKeys.map(([color]) => color) },
-                "options",
-              );
+              save([
+                ...draft,
+                { color: defaultHighlightColor, key: nextKey.current++ },
+              ]);
             }}
-          />
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent />
-        </RowItem>
-        <RowItem expanded>
-          <List>
-            {colorsAndKeys.map(([color, key], index) => (
-              <ListItem key={key}>
-                <Row>
-                  <RowItem expanded>
-                    <LabelWrapper>
-                      <Label id={`highlightColor${index}`}>
+          >
+            <SvgIcon color="var(--ub-color-text-secondary)" svg={addIcon} />
+          </button>
+        </div>
+      </div>
+      <div className={rowStyles.row}>
+        <div className={rowStyles.rowItem}>
+          <div className={indentStyles.indent} />
+        </div>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <ul className={listStyles.list}>
+            {draft.map(({ color, key }, index) => (
+              <li className={listStyles.item} key={key}>
+                <div className={rowStyles.row}>
+                  <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                    <div className={labelStyles.wrapper}>
+                      <div className={labelStyles.label} id={`${id}-${index}`}>
                         {translate(
                           "options_highlightColorNth",
                           String(index + 1),
                         )}
-                      </Label>
-                    </LabelWrapper>
-                  </RowItem>
-                  <RowItem>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={rowStyles.rowItem}>
                     <ColorPicker
-                      aria-labelledby={`highlightColor${index}`}
+                      aria-labelledby={`${id}-${index}`}
                       value={color}
                       onChange={(value) => {
-                        colorsAndKeys[index] = [
-                          value,
-                          // biome-ignore lint/style/noNonNullAssertion: `colorsAndKeys` always has a value at `index`.
-                          colorsAndKeys[index]![1],
-                        ];
-                        setColorsAndKeys([...colorsAndKeys]);
-                        void saveToLocalStorage(
-                          {
-                            highlightColors: colorsAndKeys.map(
-                              ([color]) => color,
-                            ),
-                          },
-                          "options",
+                        save(
+                          draft.map((item, i) =>
+                            i === index ? { ...item, color: value } : item,
+                          ),
                         );
                       }}
                     />
-                  </RowItem>
-                  <RowItem>
-                    {index === colorsAndKeys.length - 1 ? (
-                      <IconButton
-                        aria-label={translate("options_highlightColorAdd")}
-                        iconURL={svgToDataURL(removeIcon)}
+                  </div>
+                  <div className={rowStyles.rowItem}>
+                    {index === draft.length - 1 ? (
+                      <button
+                        className={iconButtonStyles.button}
+                        type="button"
+                        aria-label={translate("options_highlightColorRemove")}
                         onClick={() => {
-                          colorsAndKeys.pop();
-                          setColorsAndKeys([...colorsAndKeys]);
-                          void saveToLocalStorage(
-                            {
-                              highlightColors: colorsAndKeys.map(
-                                ([color]) => color,
-                              ),
-                            },
-                            "options",
-                          );
+                          save(draft.slice(0, -1));
                         }}
-                      />
+                      >
+                        <SvgIcon
+                          color="var(--ub-color-text-secondary)"
+                          svg={removeIcon}
+                        />
+                      </button>
                     ) : (
-                      <div className={spacerClass} />
+                      <div className={localStyles.spacer} />
                     )}
-                  </RowItem>
-                </Row>
-              </ListItem>
+                  </div>
+                </div>
+              </li>
             ))}
-          </List>
-        </RowItem>
-      </Row>
-    </SectionItem>
+          </ul>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
-const SetDialogTheme: React.FC = () => {
+function SetDialogTheme() {
   const id = useId();
-  const {
-    initialItems: { dialogTheme: initialDialogTheme },
-  } = useOptionsContext();
-  const [dialogTheme, setDialogTheme] = useState(initialDialogTheme);
+  const dialogTheme = storageStore.use.dialogTheme();
 
   return (
-    <SectionItem>
-      <Row>
-        <RowItem expanded>
-          <LabelWrapper>
-            <Label>{translate("options_dialogTheme")}</Label>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent>
-            <RadioButton
-              checked={dialogTheme === "default"}
-              id={`${id}-default`}
-              name="dialogTheme"
-              onChange={(e) => {
-                if (e.currentTarget.checked) {
-                  setDialogTheme("default");
-                  void saveToLocalStorage(
-                    { dialogTheme: "default" },
-                    "options",
-                  );
-                }
-              }}
-            />
-          </Indent>
-        </RowItem>
-        <RowItem expanded>
-          <LabelWrapper>
-            <ControlLabel for={`${id}-default`}>
-              {translate("options_dialogThemeDefault")}
-            </ControlLabel>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent>
-            <RadioButton
-              checked={dialogTheme === "light"}
-              id={`${id}-light`}
-              name="dialogTheme"
-              onChange={(e) => {
-                if (e.currentTarget.checked) {
-                  setDialogTheme("light");
-                  void saveToLocalStorage({ dialogTheme: "light" }, "options");
-                }
-              }}
-            />
-          </Indent>
-        </RowItem>
-        <RowItem expanded>
-          <LabelWrapper>
-            <ControlLabel for={`${id}-light`}>
-              {translate("options_dialogThemeLight")}
-            </ControlLabel>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-      <Row>
-        <RowItem>
-          <Indent>
-            <RadioButton
-              checked={dialogTheme === "dark"}
-              id={`${id}-dark`}
-              name="dialogTheme"
-              onChange={(e) => {
-                if (e.currentTarget.checked) {
-                  setDialogTheme("dark");
-                  void saveToLocalStorage({ dialogTheme: "dark" }, "options");
-                }
-              }}
-            />
-          </Indent>
-        </RowItem>
-        <RowItem expanded>
-          <LabelWrapper>
-            <ControlLabel for={`${id}-dark`}>
-              {translate("options_dialogThemeDark")}
-            </ControlLabel>
-          </LabelWrapper>
-        </RowItem>
-      </Row>
-    </SectionItem>
+    <div className={sectionStyles.item}>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <div className={labelStyles.wrapper}>
+            <div className={labelStyles.label}>
+              {translate("options_dialogTheme")}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={rowStyles.row}>
+        <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+          <RadioGroup
+            value={dialogTheme}
+            onValueChange={(value: "default" | "light" | "dark") => {
+              void saveToLocalStorage({ dialogTheme: value }, saveSource);
+            }}
+          >
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Radio.Root
+                    className={styles.radio}
+                    id={`${id}-default`}
+                    value="default"
+                  >
+                    <Radio.Indicator className={styles.indicator} />
+                  </Radio.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div className={labelStyles.wrapper}>
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-default`}
+                  >
+                    {translate("options_dialogThemeDefault")}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Radio.Root
+                    className={styles.radio}
+                    id={`${id}-light`}
+                    value="light"
+                  >
+                    <Radio.Indicator className={styles.indicator} />
+                  </Radio.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div className={labelStyles.wrapper}>
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-light`}
+                  >
+                    {translate("options_dialogThemeLight")}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className={rowStyles.row}>
+              <div className={rowStyles.rowItem}>
+                <div className={indentStyles.indent}>
+                  <Radio.Root
+                    className={styles.radio}
+                    id={`${id}-dark`}
+                    value="dark"
+                  >
+                    <Radio.Indicator className={styles.indicator} />
+                  </Radio.Root>
+                </div>
+              </div>
+              <div className={clsx(rowStyles.rowItem, rowStyles.expanded)}>
+                <div className={labelStyles.wrapper}>
+                  <label
+                    className={labelStyles.controlLabel}
+                    htmlFor={`${id}-dark`}
+                  >
+                    {translate("options_dialogThemeDark")}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </RadioGroup>
+        </div>
+      </div>
+    </div>
   );
-};
+}
 
-export const AppearanceSection: React.FC<{ id: string }> = (props) => {
+export function AppearanceSection(props: { id: string }) {
   const id = useId();
   return (
-    <Section aria-labelledby={`${id}-title`} id={props.id}>
-      <SectionHeader>
-        <SectionTitle id={`${id}-title`}>
+    <section
+      className={sectionStyles.section}
+      aria-labelledby={`${id}-title`}
+      id={props.id}
+    >
+      <div className={sectionStyles.header}>
+        <h1 className={sectionStyles.title} id={`${id}-title`}>
           {translate("options_appearanceTitle")}
-        </SectionTitle>
-      </SectionHeader>
-      <SectionBody>
-        <SetColorItem
-          initialColor={defaultBlockColor}
-          itemKey="blockColor"
-          label={translate("options_blockColor")}
-        />
+        </h1>
+      </div>
+      <div className={sectionStyles.body}>
+        <SetBlockColor />
         <SetHighlightColors />
         <SetDialogTheme />
-      </SectionBody>
-    </Section>
+      </div>
+    </section>
   );
-};
+}

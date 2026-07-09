@@ -1,3 +1,0 @@
-For the list of changes in this version, please refer to the release notes:
-
-https://github.com/iorate/ublacklist/releases/tag/$TAG
