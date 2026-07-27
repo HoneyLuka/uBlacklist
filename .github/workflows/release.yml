@@ -20,12 +20,9 @@ jobs:
 
     timeout-minutes: 30
 
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -49,11 +46,20 @@ jobs:
           git config user.name 'iorate-bot[bot]'
           git config user.email '266279786+iorate-bot[bot]@users.noreply.github.com'
 
-      - name: Create version pull request or tag
+      - name: Compute next version
+        id: next-version
+        run: |
+          pnpm changeset status --output="$RUNNER_TEMP/changeset-status.json"
+          version=$(jq -r '.releases[0].newVersion // ""' "$RUNNER_TEMP/changeset-status.json")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create release pull request or tag
         id: changesets
         uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
         with:
           publish: pnpm changeset publish
+          commit: Release v${{ steps.next-version.outputs.version }}
+          title: Release v${{ steps.next-version.outputs.version }}
           createGithubReleases: false
           commitMode: github-api
         env:
@@ -64,7 +70,7 @@ jobs:
         run: |
           git -c credential.helper= \
               -c credential.helper='!gh auth git-credential' \
-              push origin "v$VERSION"
+              push origin "refs/tags/v$VERSION"
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           VERSION: ${{ fromJSON(steps.changesets.outputs.publishedPackages)[0].version }}

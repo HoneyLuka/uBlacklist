@@ -23,3 +23,6 @@ README.*.md
 .claude/settings.local.json
 .claude/worktrees/
 CLAUDE.local.md
+
+# Playwright
+test-results/

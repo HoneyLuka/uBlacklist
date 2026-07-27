@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+export const AMO_RELEASE_NOTES_MAX_LENGTH = 3000;
 
 export function extractReleaseNotes(changelog: string): string {
   // # <package>
@@ -20,15 +20,24 @@ export function extractReleaseNotes(changelog: string): string {
   return (end === -1 ? rest : rest.slice(0, end)).join("\n").trim();
 }
 
-async function main() {
-  const changelog = await fs.readFile("CHANGELOG.md", "utf8");
-  await fs.mkdir("dist", { recursive: true });
-  await fs.writeFile(
-    "dist/release-notes.md",
-    `${extractReleaseNotes(changelog)}\n`,
-  );
-}
-
-if (import.meta.main) {
-  await main();
+export function truncateReleaseNotes(
+  notes: string,
+  limit: number,
+  releaseUrl: string,
+): string {
+  if (notes.length <= limit) {
+    return notes;
+  }
+  const suffix = `[See the full release notes](${releaseUrl})`;
+  const paragraphs = notes.split(/\n{2,}/);
+  const kept: string[] = [];
+  let length = suffix.length;
+  for (const paragraph of paragraphs) {
+    length += paragraph.length + 2;
+    if (length > limit) {
+      break;
+    }
+    kept.push(paragraph);
+  }
+  return [...kept, suffix].join("\n\n");
 }

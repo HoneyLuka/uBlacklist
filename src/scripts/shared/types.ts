@@ -33,14 +33,23 @@ export type Cloud = {
   hostPermissions: string[];
   modifiedTimePrecision: "millisecond" | "second";
   shouldUseAltFlow(os: string): boolean;
-  authorize(useAltFlow: boolean): Promise<{ authorizationCode: string }>;
+  authorize(
+    useAltFlow: boolean,
+    codeVerifier: string,
+  ): Promise<{ authorizationCode: string }>;
   getAccessToken(
     authorizationCode: string,
     useAltFlow: boolean,
+    codeVerifier: string,
   ): Promise<{ accessToken: string; expiresIn: number; refreshToken: string }>;
   refreshAccessToken(
     refreshToken: string,
-  ): Promise<{ accessToken: string; expiresIn: number }>;
+    pkce: boolean,
+  ): Promise<{
+    accessToken: string;
+    expiresIn: number | null;
+    refreshToken: string | null;
+  }>;
   createFile(
     accessToken: string,
     filename: string,
@@ -62,8 +71,9 @@ export type Cloud = {
 
 export type CloudToken = {
   accessToken: string;
-  expiresAt: string;
+  expiresAt: string | null;
   refreshToken: string;
+  pkce?: boolean;
 };
 
 export type SyncBackendClient = {

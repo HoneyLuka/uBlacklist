@@ -3,36 +3,40 @@ import { translate } from "../shared/locales.ts";
 import type { Cloud, CloudToken, SyncBackendClient } from "../shared/types.ts";
 import { HTTPError } from "../shared/utilities.ts";
 
-export type CloudClientHooks = {
-  persistToken(token: CloudToken): Promise<void>;
-  onUnauthorized(): Promise<void>;
-};
-
 export function createClient(
   cloud: Cloud,
-  initialToken: CloudToken,
-  hooks: CloudClientHooks,
+  token: CloudToken,
+  setToken: (token: CloudToken | null) => Promise<void>,
 ): SyncBackendClient {
-  let token = { ...initialToken };
   const refresh = async (): Promise<void> => {
     try {
-      const newToken = await cloud.refreshAccessToken(token.refreshToken);
+      const newToken = await cloud.refreshAccessToken(
+        token.refreshToken,
+        token.pkce ?? false,
+      );
       token = {
         accessToken: newToken.accessToken,
-        expiresAt: dayjs().add(newToken.expiresIn, "second").toISOString(),
-        refreshToken: token.refreshToken,
+        expiresAt:
+          newToken.expiresIn != null
+            ? dayjs().add(newToken.expiresIn, "second").toISOString()
+            : null,
+        refreshToken: newToken.refreshToken ?? token.refreshToken,
+        pkce: token.pkce ?? false,
       };
-      await hooks.persistToken(token);
+      await setToken(token);
     } catch (e: unknown) {
       if (e instanceof HTTPError && e.status === 400) {
-        await hooks.onUnauthorized();
+        await setToken(null);
         throw new Error(translate("unauthorizedError"));
       }
       throw e;
     }
   };
   const handleRefresh = async <T>(f: () => Promise<T>): Promise<T> => {
-    if (dayjs().isAfter(dayjs(token.expiresAt))) {
+    if (
+      token.expiresAt != null &&
+      dayjs().isAfter(dayjs(token.expiresAt).subtract(60, "second"))
+    ) {
       await refresh();
     }
     try {
