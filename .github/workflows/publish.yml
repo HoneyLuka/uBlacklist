@@ -34,6 +34,9 @@ jobs:
           # Protect the release build from cache poisoning.
           cache: false
 
+      - name: Setup changesette
+        uses: iorate/changesette/setup@3524e7dec1f7edf104feec6a8605bb25ef258060 # v2.0.1
+
       - name: Prepare release directories
         run: mkdir -p dist/release/{chrome,edge,firefox,github}
 
@@ -74,10 +77,18 @@ jobs:
 
       - name: Build notes
         run: |
+          changesette changelog "$(changesette current)" \
+            > dist/release/github/release-notes.md
           # shellcheck disable=SC2016 # envsubst reads $VAR as an allowlist literal
-          envsubst '$RELEASE_URL' < release/edge/notes-for-certification.template.txt > dist/release/edge/notes-for-certification.txt
-          cp release/firefox/approval-notes.txt dist/release/firefox/
-          pnpm node release/scripts/build-release-notes.ts "$RELEASE_URL"
+          envsubst '$RELEASE_URL' \
+            < release/edge/notes-for-certification.template.txt \
+            > dist/release/edge/notes-for-certification.txt
+          cp \
+            release/firefox/approval-notes.txt \
+            dist/release/firefox/
+          pnpm node release/scripts/truncate-release-notes.ts 3000 "$RELEASE_URL" \
+            < dist/release/github/release-notes.md \
+            > dist/release/firefox/release-notes.md
         env:
           RELEASE_URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
 
@@ -104,7 +115,7 @@ jobs:
           path: dist/release
 
       - name: Install wepub
-        uses: iorate/setup-wepub@e37aebcc98937c8bfa4e22a438a4b89a75b4e349 # v1.0.0
+        uses: iorate/wepub/setup@d1065b044ceec042925bddc1c8b7db6884b80c26 # v1.0.3
 
       - name: Publish to Chrome Web Store
         run: wepub chrome dist/release/chrome/package.zip
@@ -132,7 +143,7 @@ jobs:
           path: dist/release
 
       - name: Install wepub
-        uses: iorate/setup-wepub@e37aebcc98937c8bfa4e22a438a4b89a75b4e349 # v1.0.0
+        uses: iorate/wepub/setup@d1065b044ceec042925bddc1c8b7db6884b80c26 # v1.0.3
 
       - name: Publish to Edge Add-ons
         run: wepub edge dist/release/edge/package.zip --notes-file dist/release/edge/notes-for-certification.txt
@@ -181,7 +192,7 @@ jobs:
           GOOGLE_DRIVE_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_CLIENT_SECRET }}
 
       - name: Install wepub
-        uses: iorate/setup-wepub@e37aebcc98937c8bfa4e22a438a4b89a75b4e349 # v1.0.0
+        uses: iorate/wepub/setup@d1065b044ceec042925bddc1c8b7db6884b80c26 # v1.0.3
 
       - name: Publish to Firefox Add-ons
         run: |
