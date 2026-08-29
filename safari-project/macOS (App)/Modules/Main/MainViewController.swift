@@ -221,7 +221,7 @@ class MainViewController: NSViewController {
     }()
     
     lazy var iconImageView: NSImageView = {
-        let image = NSImage(named: "AppIcon")!
+        let image = NSImage(named: "icon-app")!
         let imageView = NSImageView(image: image)
         return imageView
     }()

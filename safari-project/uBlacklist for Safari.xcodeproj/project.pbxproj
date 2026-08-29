@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3607F4833042D33B00D1AA7E /* glassicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3607F4823042D33B00D1AA7E /* glassicon.icon */; };
+		3607F4843042D33B00D1AA7E /* glassicon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 3607F4823042D33B00D1AA7E /* glassicon.icon */; };
 		6A323BB97C87FED7657B9E9C /* Pods_uBlacklist_for_Safari__macOS_.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F935002044BD70848B5D5DE4 /* Pods_uBlacklist_for_Safari__macOS_.framework */; };
 		6A6A3D0926F35275000B99BE /* grant-permission-guide.gif in Resources */ = {isa = PBXBuildFile; fileRef = 6A6A3CF026F35275000B99BE /* grant-permission-guide.gif */; };
 		6A6A3D0A26F35275000B99BE /* other-licence.html in Resources */ = {isa = PBXBuildFile; fileRef = 6A6A3CF226F35275000B99BE /* other-licence.html */; };
@@ -128,6 +130,7 @@
 		0CEDCAAAFA33348D26976E3F /* Pods-uBlacklist for Safari Extension (macOS).release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-uBlacklist for Safari Extension (macOS).release.xcconfig"; path = "Target Support Files/Pods-uBlacklist for Safari Extension (macOS)/Pods-uBlacklist for Safari Extension (macOS).release.xcconfig"; sourceTree = "<group>"; };
 		0F70AAB38D3CF10ED967F9BC /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2398F6F21445D421CB211006 /* Pods_uBlacklist_for_Safari_Extension__macOS_.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_uBlacklist_for_Safari_Extension__macOS_.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3607F4823042D33B00D1AA7E /* glassicon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = glassicon.icon; sourceTree = "<group>"; };
 		57ED16A695A999570DC98FB5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		66F6D373CF9EF60C8ECEAF9A /* Pods-uBlacklist for Safari (iOS).release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-uBlacklist for Safari (iOS).release.xcconfig"; path = "Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS).release.xcconfig"; sourceTree = "<group>"; };
 		6A6A3CF026F35275000B99BE /* grant-permission-guide.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = "grant-permission-guide.gif"; sourceTree = "<group>"; };
@@ -430,6 +433,7 @@
 		6AA45AB326F34B4200D6629A /* Shared (App) */ = {
 			isa = PBXGroup;
 			children = (
+				3607F4823042D33B00D1AA7E /* glassicon.icon */,
 				6AA45ABA26F34B4200D6629A /* ViewController.swift */,
 				6AA45ABB26F34B4300D6629A /* Assets.xcassets */,
 				6A6A3D1626F35869000B99BE /* Extensions.swift */,
@@ -706,6 +710,7 @@
 				6A6A3D3126F49655000B99BE /* ios-guide-step-7.png in Resources */,
 				A17B44E32709E86400410B9A /* ios-guide-step-pad-3.png in Resources */,
 				6A6A3D3426F49655000B99BE /* ios-guide-step-1.png in Resources */,
+				3607F4833042D33B00D1AA7E /* glassicon.icon in Resources */,
 				A17B44E82709E86400410B9A /* ios-guide-step-pad-8.png in Resources */,
 				A17B44E22709E86400410B9A /* ios-guide-step-pad-6.png in Resources */,
 				A17B44E72709E86400410B9A /* ios-guide-step-pad-7.png in Resources */,
@@ -719,6 +724,7 @@
 			files = (
 				6AA45ADA26F34B4300D6629A /* Main.storyboard in Resources */,
 				6A6A3D0B26F35275000B99BE /* licence.html in Resources */,
+				3607F4843042D33B00D1AA7E /* glassicon.icon in Resources */,
 				6A6A3D0C26F35275000B99BE /* Localizable.strings in Resources */,
 				6AA45AFD26F34B4300D6629A /* Assets.xcassets in Resources */,
 				6A6A3D0926F35275000B99BE /* grant-permission-guide.gif in Resources */,
@@ -829,9 +835,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (macOS)/Pods-uBlacklist for Safari (macOS)-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (macOS)/Pods-uBlacklist for Safari (macOS)-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -868,9 +878,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS)-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-uBlacklist for Safari (iOS)/Pods-uBlacklist for Safari (iOS)-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1108,7 +1122,7 @@
 			baseConfigurationReference = CEA00A4B5E243FD7A05EA2B7 /* Pods-uBlacklist for Safari Extension (iOS).debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
@@ -1120,7 +1134,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1140,7 +1154,7 @@
 			baseConfigurationReference = 0402E0A0F207CD885903154D /* Pods-uBlacklist for Safari Extension (iOS).release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
@@ -1152,7 +1166,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1173,11 +1187,11 @@
 			baseConfigurationReference = DF30642323E6EBC936ED8BD4 /* Pods-uBlacklist for Safari (iOS).debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = glassicon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "uBlacklist for Safari (iOS).entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (App)/Info.plist";
@@ -1192,7 +1206,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1214,11 +1228,11 @@
 			baseConfigurationReference = 66F6D373CF9EF60C8ECEAF9A /* Pods-uBlacklist for Safari (iOS).release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = glassicon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "uBlacklist for Safari (iOS).entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "iOS (App)/Info.plist";
@@ -1233,7 +1247,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1257,7 +1271,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/uBlacklist for Safari.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1270,7 +1284,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1290,7 +1304,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/uBlacklist for Safari.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1303,7 +1317,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1322,11 +1336,11 @@
 			baseConfigurationReference = AC91791F397CDD6F6E1C0697 /* Pods-uBlacklist for Safari (macOS).debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = glassicon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "macOS (App)/uBlacklist for Safari.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1340,7 +1354,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -1361,11 +1375,11 @@
 			baseConfigurationReference = 8962C7ADFD5631F7A2D4F66F /* Pods-uBlacklist for Safari (macOS).release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = glassicon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "macOS (App)/uBlacklist for Safari.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2026072701;
+				CURRENT_PROJECT_VERSION = 2026082902;
 				DEVELOPMENT_TEAM = 43G9ZW34K3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1379,7 +1393,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 10.0.1;
+				MARKETING_VERSION = 10.0.3;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,

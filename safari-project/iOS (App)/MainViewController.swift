@@ -48,13 +48,12 @@ class MainViewController: UIViewController {
     }()
     
     private lazy var iconImageView: UIImageView = {
-        let img = UIImage(named: "AppIcon60x60")
+        let img = UIImage(named: "icon-app")
         let imageView = UIImageView(image: img)
         imageView.snp.makeConstraints { make in
             make.size.equalTo(IconSize)
         }
         imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 8
         
         return imageView
     }()
