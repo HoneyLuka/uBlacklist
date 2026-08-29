@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
 import { NumberField } from "../../components/number-field.tsx";
 import {
   clampSyncInterval,
@@ -8,9 +9,10 @@ import {
 import { saveToLocalStorage } from "../../shared/local-storage.ts";
 import { translate } from "../../shared/locales.ts";
 import { storageStore } from "../../shared/storage-store.ts";
+import { saveSource } from "./save-source.ts";
+
 import labelStyles from "../../styles/label.module.css";
 import rowStyles from "../../styles/row.module.css";
-import { saveSource } from "./save-source.ts";
 import localStyles from "./set-interval-item.module.css";
 
 export type IntervalItemKey = "syncInterval" | "updateInterval";
@@ -43,10 +45,11 @@ export function SetIntervalItem({
     clampIntervals[itemKey](storedMinutes) / minutesPerUnit[unit],
   );
   const [value, setValue] = useState<number | null>(storedValue);
-
-  useEffect(() => {
+  const [prevStoredValue, setPrevStoredValue] = useState(storedValue);
+  if (prevStoredValue !== storedValue) {
+    setPrevStoredValue(storedValue);
     setValue(storedValue);
-  }, [storedValue]);
+  }
 
   return (
     <div className={clsx(rowStyles.row, localStyles.row)}>

@@ -4,7 +4,8 @@ import removeIcon from "@mdi/svg/svg/delete.svg";
 import addIcon from "@mdi/svg/svg/plus.svg";
 import clsx from "clsx";
 import { isEqual } from "es-toolkit";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
+
 import { ColorPicker } from "../components/color-picker.tsx";
 import { SvgIcon } from "../components/svg-icon.tsx";
 import {
@@ -14,6 +15,8 @@ import {
 import { saveToLocalStorage } from "../shared/local-storage.ts";
 import { translate } from "../shared/locales.ts";
 import { storageStore } from "../shared/storage-store.ts";
+import { saveSource } from "./shared/save-source.ts";
+
 import iconButtonStyles from "../styles/icon-button.module.css";
 import indentStyles from "../styles/indent.module.css";
 import labelStyles from "../styles/label.module.css";
@@ -22,23 +25,22 @@ import styles from "../styles/radio.module.css";
 import rowStyles from "../styles/row.module.css";
 import sectionStyles from "../styles/section.module.css";
 import localStyles from "./appearance-section.module.css";
-import { saveSource } from "./shared/save-source.ts";
 
 function SetBlockColor() {
   const id = useId();
   const stored = storageStore.use.blockColor();
   const [draft, setDraft] = useState(stored);
-  const pending = useRef(false);
-  if (pending.current) {
+  const [pending, setPending] = useState(false);
+  if (pending) {
     if (stored === draft) {
-      pending.current = false;
+      setPending(false);
     }
   } else if (stored !== draft) {
     setDraft(stored);
   }
 
   const save = (value: string) => {
-    pending.current = true;
+    setPending(true);
     setDraft(value);
     void saveToLocalStorage({ blockColor: value }, saveSource);
   };
@@ -130,19 +132,22 @@ function SetHighlightColors() {
   const [draft, setDraft] = useState(() =>
     storedColors.map((color, index) => ({ color, key: index })),
   );
-  const nextKey = useRef(storedColors.length);
-  const pending = useRef(false);
+  const [nextKey, setNextKey] = useState(storedColors.length);
+  const [pending, setPending] = useState(false);
   const draftColors = draft.map((item) => item.color);
-  if (pending.current) {
+  if (pending) {
     if (isEqual(storedColors, draftColors)) {
-      pending.current = false;
+      setPending(false);
     }
   } else if (!isEqual(storedColors, draftColors)) {
-    setDraft(storedColors.map((color) => ({ color, key: nextKey.current++ })));
+    setDraft(
+      storedColors.map((color, index) => ({ color, key: nextKey + index })),
+    );
+    setNextKey(nextKey + storedColors.length);
   }
 
   const save = (next: { color: string; key: number }[]) => {
-    pending.current = true;
+    setPending(true);
     setDraft(next);
     void saveToLocalStorage(
       { highlightColors: next.map((item) => item.color) },
@@ -172,10 +177,8 @@ function SetHighlightColors() {
             type="button"
             aria-label={translate("options_highlightColorAdd")}
             onClick={() => {
-              save([
-                ...draft,
-                { color: defaultHighlightColor, key: nextKey.current++ },
-              ]);
+              save([...draft, { color: defaultHighlightColor, key: nextKey }]);
+              setNextKey(nextKey + 1);
             }}
           >
             <SvgIcon color="var(--ub-color-text-secondary)" svg={addIcon} />

@@ -1,5 +1,6 @@
 # Environment files
 .env
+.env.local
 
 # Build outputs
 dist/
@@ -18,11 +19,6 @@ local/
 README.*.md
 !README.de.md
 !README.zh-CN.md
-
-# Claude Code
-.claude/settings.local.json
-.claude/worktrees/
-CLAUDE.local.md
 
 # Playwright
 test-results/

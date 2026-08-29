@@ -28,14 +28,14 @@ jobs:
           submodules: recursive
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
           run_install: true
           # Protect the release build from cache poisoning.
           cache: false
 
       - name: Setup changesette
-        uses: iorate/changesette/setup@3524e7dec1f7edf104feec6a8605bb25ef258060 # v2.0.1
+        uses: iorate/changesette/setup@ab7bf31298fd9efd8ae6342b7bd6fc2116ce0336 # v6.2.1
 
       - name: Prepare release directories
         run: mkdir -p dist/release/{chrome,edge,firefox,github}
@@ -77,7 +77,7 @@ jobs:
 
       - name: Build notes
         run: |
-          changesette changelog "$(changesette current)" \
+          changesette get-changelog-entry ublacklist "$(jq -re .version package.json)" \
             > dist/release/github/release-notes.md
           # shellcheck disable=SC2016 # envsubst reads $VAR as an allowlist literal
           envsubst '$RELEASE_URL' \

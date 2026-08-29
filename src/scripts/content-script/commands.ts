@@ -6,11 +6,13 @@ import type {
 } from "@ublacklist/serpinfo";
 import { zip } from "es-toolkit";
 import punycode from "punycode/";
+
 import iconSVG from "../../icons/icon.svg";
 import { adoptStyleSheet } from "../shared/adopt-style-sheet.ts";
 import { attributes as a, classes as c } from "./constants.ts";
 import { cssStringify } from "./css-stringify.ts";
 import { setStaticGlobalStyle } from "./global-styles.ts";
+
 import iconButtonStyles from "./icon-button.css" with { type: "text" };
 import textButtonStyles from "./text-button.css" with { type: "text" };
 
@@ -147,7 +149,7 @@ const propertyCommandImpl: PropertyCommandImpl = {
       return null;
     }
     // https://stackoverflow.com/questions/47514123/domain-name-regex-including-idn-characters-c-sharp
-    const m = /(?:[\p{L}\p{N}][\p{L}\p{N}_-]*\.)+[\p{L}\p{N}]{2,}/u.exec(text);
+    const m = /(?:[\p{L}\p{N}][\p{L}\p{N}_-]*\.)+\p{L}{2,}/u.exec(text);
     if (m == null) {
       return null;
     }
@@ -377,7 +379,6 @@ const buttonCommandImpl: ButtonCommandImpl = {
       unhighlight: context.buttonProps.unhighlightLabel,
     };
     for (const [part, label] of Object.entries(labels)) {
-      // biome-ignore lint/style/noNonNullAssertion: the span always exists
       shadowRoot.querySelector(`[part="${part}"]`)!.textContent = label;
     }
     addButtonListeners(shadowRoot, context.buttonProps);

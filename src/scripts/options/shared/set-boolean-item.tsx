@@ -1,18 +1,22 @@
 import { Switch } from "@base-ui/react/switch";
 import clsx from "clsx";
+
 import { saveToLocalStorage } from "../../shared/local-storage.ts";
 import { storageStore } from "../../shared/storage-store.ts";
 import type { LocalStorageItems } from "../../shared/types.ts";
+import { saveSource } from "./save-source.ts";
+
 import labelStyles from "../../styles/label.module.css";
 import rowStyles from "../../styles/row.module.css";
 import styles from "../../styles/switch.module.css";
-import { saveSource } from "./save-source.ts";
 import localStyles from "./set-boolean-item.module.css";
 
 export type BooleanItemKey = keyof {
-  [Key in keyof LocalStorageItems as boolean extends LocalStorageItems[Key]
-    ? Key
-    : never]: boolean;
+  [
+    Key in keyof LocalStorageItems as boolean extends LocalStorageItems[Key]
+      ? Key
+      : never
+  ]: boolean;
 };
 
 export function SetBooleanItem({
