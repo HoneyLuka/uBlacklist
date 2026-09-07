@@ -7,14 +7,6 @@
     "message": "指定したサイトが Google の検索結果で表示されないようにします",
     "description": "The description of the extension."
   },
-  "lang": {
-    "message": "ja",
-    "description": "The language code."
-  },
-  "websiteLocale": {
-    "message": "ja",
-    "description": "The locale code for the website. Do not translate this message until the website is translated."
-  },
   "error": {
     "message": "エラー: $1",
     "description": "Error message. '$1' will be replaced with the actual error."
@@ -768,7 +760,7 @@
     "description": "Label for the radio button to sync with WebDAV."
   },
   "clouds_webdavSyncDescription": {
-    "message": "URL で指定したフォルダーにファイルが作成されます。",
+    "message": "URL で指定したフォルダにファイルが作成されます。",
     "description": "Description for WebDAV sync."
   },
   "clouds_webdavSyncTurnedOn": {
@@ -779,8 +771,8 @@
     "message": "WebDAV URL",
     "description": "Label for the input for the WebDAV URL."
   },
-  "clouds_webdavUrlDescription": {
-    "message": "URL で指定したフォルダーは、あらかじめ作成しておく必要があります。",
+  "clouds_webdavUrlCreateDescription": {
+    "message": "URL で指定したフォルダが存在しない場合は作成されます。",
     "description": "Description for the input for the WebDAV URL."
   },
   "clouds_webdavUsernameLabel": {

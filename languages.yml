@@ -1,0 +1,26 @@
+# Supported translations. English is the source and is not listed here.
+# After editing, run `pnpm generate`.
+#
+# Each key is a locale code supported by the browser (the directory name under
+# src/_locales) with "_" replaced by "-". It is also used as is for the README
+# file name (README.<tag>.md) and the website locale.
+#
+# crowdin: language code on Crowdin (default: the tag).
+# dayjs:   locale name of dayjs (default: the tag in lower case).
+# readme:  true once the README translation on Crowdin is good enough to merge.
+#          Until then, the file Crowdin exports is ignored in the Crowdin workflows.
+# website: true if https://ublacklist.github.io is translated. When setting it,
+#          register https://ublacklist.github.io/<tag>/callback as a redirect
+#          URI on Google Cloud and Dropbox.
+de: { readme: true, website: true }
+es: { crowdin: es-ES }
+fr:
+ja: { website: true }
+ko:
+pl:
+pt-BR: { website: true }
+ru:
+tr:
+uk:
+zh-CN: { readme: true }
+zh-TW:

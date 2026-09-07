@@ -15,10 +15,5 @@ local/
 .DS_Store
 .vscode/
 
-# Untranslated readme files
-README.*.md
-!README.de.md
-!README.zh-CN.md
-
 # Playwright
 test-results/

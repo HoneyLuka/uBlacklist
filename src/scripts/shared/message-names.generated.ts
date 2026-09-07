@@ -5,8 +5,6 @@ export type MessageName =
 export type MessageName0 =
   | "extensionName"
   | "extensionDescription"
-  | "lang"
-  | "websiteLocale"
   | "unauthorizedError"
   | "cancelButton"
   | "okButton"
@@ -191,7 +189,7 @@ export type MessageName0 =
   | "clouds_webdavSyncDescription"
   | "clouds_webdavSyncTurnedOn"
   | "clouds_webdavUrlLabel"
-  | "clouds_webdavUrlDescription"
+  | "clouds_webdavUrlCreateDescription"
   | "clouds_webdavUsernameLabel"
   | "clouds_webdavPasswordLabel"
   | "clouds_browserSync"

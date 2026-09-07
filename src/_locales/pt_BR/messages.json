@@ -7,14 +7,6 @@
     "message": "Bloqueia sites que você escolher de aparecer nos resultados de pesquisa do Google",
     "description": "The description of the extension."
   },
-  "lang": {
-    "message": "pt-BR",
-    "description": "The language code."
-  },
-  "websiteLocale": {
-    "message": "pt-BR",
-    "description": "The locale code for the website. Do not translate this message until the website is translated."
-  },
   "error": {
     "message": "Erro: $1",
     "description": "Error message. '$1' will be replaced with the actual error."
@@ -779,8 +771,8 @@
     "message": "WebDAV URL",
     "description": "Label for the input for the WebDAV URL."
   },
-  "clouds_webdavUrlDescription": {
-    "message": "The folder specified by the URL must already exist.",
+  "clouds_webdavUrlCreateDescription": {
+    "message": "The folder specified by the URL is created if it does not exist.",
     "description": "Description for the input for the WebDAV URL."
   },
   "clouds_webdavUsernameLabel": {
