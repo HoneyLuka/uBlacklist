@@ -1,0 +1,220 @@
+name: Release to App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "App version (defaults to the version in package.json)"
+        type: string
+        default: ""
+      build_number:
+        description: "Build number, e.g. 2026091401 (defaults to YYYYMMDDNN computed from App Store Connect)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+  ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+  ASC_API_KEY: ${{ secrets.ASC_API_KEY }}
+
+jobs:
+  prepare:
+    name: Resolve version and build number
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 10
+
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      build_number: ${{ steps.resolve.outputs.build_number }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve version and build number
+        id: resolve
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          BUILD_NUMBER_INPUT: ${{ inputs.build_number }}
+        run: |
+          version="$VERSION_INPUT"
+          if [ -z "$version" ]; then
+            version=$(jq -re .version package.json)
+          fi
+          if ! [[ $version =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::Invalid version: $version"
+            exit 1
+          fi
+
+          build_number=$(python3 .github/scripts/asc_next_build_number.py "$BUILD_NUMBER_INPUT")
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+          echo "Resolved version=$version build_number=$build_number"
+
+  build-and-upload:
+    name: Build and upload (${{ matrix.platform }})
+    needs: prepare
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ios
+            scheme: "uBlacklist for Safari (iOS)"
+            destination: "generic/platform=iOS"
+            export_options: ci/ExportOptions.ios.plist
+          - platform: macos
+            scheme: "uBlacklist for Safari (macOS)"
+            destination: "generic/platform=macOS"
+            export_options: ci/ExportOptions.macos.plist
+
+    runs-on: macos-26
+
+    timeout-minutes: 90
+
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+      BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+
+    steps:
+      - name: Check required secrets
+        env:
+          DROPBOX_API_KEY: ${{ secrets.DROPBOX_API_KEY }}
+          DROPBOX_API_SECRET: ${{ secrets.DROPBOX_API_SECRET }}
+          GOOGLE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
+          GOOGLE_DRIVE_API_SECRET: ${{ secrets.GOOGLE_DRIVE_API_SECRET }}
+        run: |
+          missing=0
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_API_KEY DROPBOX_API_KEY DROPBOX_API_SECRET GOOGLE_DRIVE_API_KEY GOOGLE_DRIVE_API_SECRET; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required secret '$name' is not configured."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          run_install: true
+          # Protect the release build from cache poisoning.
+          cache: false
+
+      - name: Build uBlacklist (safari)
+        env:
+          DROPBOX_API_KEY: ${{ secrets.DROPBOX_API_KEY }}
+          DROPBOX_API_SECRET: ${{ secrets.DROPBOX_API_SECRET }}
+          GOOGLE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
+          GOOGLE_DRIVE_API_SECRET: ${{ secrets.GOOGLE_DRIVE_API_SECRET }}
+        run: |
+          pnpm build -b safari
+          # Fail early if any sync credentials were missing at build time.
+          if grep -rq "not set>" dist/safari/scripts; then
+            echo "::error::Built bundle contains placeholder credentials; check the sync secrets."
+            grep -rl "not set>" dist/safari/scripts
+            exit 1
+          fi
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup CocoaPods
+        run: gem install cocoapods -v 1.17.0 --no-document
+
+      - name: Install pods
+        working-directory: safari-project
+        run: pod install
+
+      - name: Set version and build number
+        working-directory: safari-project/scripts
+        run: ruby change_version.rb "$VERSION" "$BUILD_NUMBER"
+
+      - name: Write App Store Connect API key
+        run: |
+          key_file="$HOME/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s' "$ASC_API_KEY" | base64 --decode > "$key_file"
+          chmod 600 "$key_file"
+          if ! head -1 "$key_file" | grep -q "BEGIN PRIVATE KEY"; then
+            echo "::error::The ASC_API_KEY secret does not look like a base64-encoded .p8 file."
+            exit 1
+          fi
+          echo "ASC_KEY_PATH=$key_file" >> "$GITHUB_ENV"
+
+      - name: Archive (${{ matrix.platform }})
+        working-directory: safari-project
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace "uBlacklist for Safari.xcworkspace" \
+            -scheme "${{ matrix.scheme }}" \
+            -configuration Release \
+            -destination "${{ matrix.destination }}" \
+            -archivePath "build/${{ matrix.platform }}.xcarchive" \
+            -resultBundlePath "build/${{ matrix.platform }}.xcresult" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -allowProvisioningUpdates \
+            archive 2>&1 | tee "build/${{ matrix.platform }}-archive.log"
+
+      - name: Export and upload to App Store Connect (${{ matrix.platform }})
+        working-directory: safari-project
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -exportArchive \
+            -archivePath "build/${{ matrix.platform }}.xcarchive" \
+            -exportOptionsPlist "${{ matrix.export_options }}" \
+            -exportPath "build/export-${{ matrix.platform }}" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            -allowProvisioningUpdates
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: ${{ matrix.platform }}-build
+          path: |
+            safari-project/build/*.log
+            safari-project/build/*.xcarchive
+            safari-project/build/*.xcresult
+            safari-project/build/export-*
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Job summary
+        if: success()
+        run: |
+          {
+            echo "### ${{ matrix.platform }} — uploaded to App Store Connect"
+            echo "- Version: \`$VERSION\`"
+            echo "- Build number: \`$BUILD_NUMBER\`"
+            echo "Next: review the build on [App Store Connect](https://appstoreconnect.apple.com), edit the release notes, and submit for review."
+          } >> "$GITHUB_STEP_SUMMARY"
