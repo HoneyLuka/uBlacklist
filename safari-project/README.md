@@ -77,7 +77,7 @@ There are two workflows; both build the iOS and macOS apps and upload them to Ap
 
 **Release to App Store** — builds the branch as-is. Merge the upstream release into the branch locally and push first.
 
-**Release to App Store from upstream tag** — also merges for you: give it an upstream tag (e.g. `v10.1.0`) and it merges the tag into the branch you run it on, pushes the merge commit, and continues like the plain workflow. If the merge conflicts, the run fails with instructions to resolve it locally; re-running with an already-merged tag is a safe no-op. Use `ai` as the branch to rehearse a release.
+**Release to App Store from upstream tag** — also merges for you: give it an upstream tag (e.g. `v10.1.0`) and it merges the tag into the branch you run it on, pushes the merge commit, and continues like the plain workflow. If the merge conflicts, the run fails with instructions to resolve it locally; re-running with an already-merged tag is a safe no-op (to rehearse, run it on `safari-port` with a tag that is already merged — only an extra build gets uploaded).
 
 For both workflows the remaining inputs are optional:
 
