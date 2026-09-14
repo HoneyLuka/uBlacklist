@@ -173,6 +173,9 @@ jobs:
       - name: Archive (${{ matrix.platform }})
         working-directory: safari-project
         run: |
+          # tee does not create directories; without this it passes the
+          # output through but exits 1, failing the step via pipefail.
+          mkdir -p build
           set -o pipefail
           xcodebuild \
             -workspace "uBlacklist for Safari.xcworkspace" \
@@ -190,6 +193,7 @@ jobs:
       - name: Export and upload to App Store Connect (${{ matrix.platform }})
         working-directory: safari-project
         run: |
+          mkdir -p build
           set -o pipefail
           xcodebuild \
             -exportArchive \
