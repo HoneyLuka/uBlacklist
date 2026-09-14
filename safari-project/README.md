@@ -69,7 +69,7 @@ The [Release to App Store](../.github/workflows/app-store-release.yml) workflow 
 | `GOOGLE_DRIVE_API_SECRET` | Same value as `.env.local`                                                                                                                                                           |
 | `ONEDRIVE_CLIENT_ID`      | _Optional_. Safari builds never show the OneDrive sync option (upstream gates it by browser), so this is normally unneeded; set it only if upstream ever enables OneDrive for Safari |
 
-The App Store Connect API key needs the Admin or App Manager role. Signing is fully automatic: `xcodebuild -allowProvisioningUpdates` uses the Xcode-managed (cloud) distribution certificate, so no `.p12` is stored in the repository.
+The App Store Connect API key needs the **Admin** role: cloud signing requires access to the certificates and profiles resources, which only Admin keys have (an App Manager key can read apps/builds but fails export with "Cloud signing permission error"). Signing is fully automatic: `xcodebuild -allowProvisioningUpdates` uses the Xcode-managed (cloud) distribution certificate, so no `.p12` is stored in the repository.
 
 ### Usage
 
