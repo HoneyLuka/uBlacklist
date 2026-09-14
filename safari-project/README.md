@@ -73,11 +73,16 @@ The App Store Connect API key needs the **Admin** role: cloud signing requires a
 
 ### Usage
 
-1. Merge the upstream release into `safari-port` locally and push (this step is manual by design).
-2. On GitHub, open **Actions → Release to App Store → Run workflow**, choose the branch, and run it. Both inputs are optional:
-   - **version**: defaults to the version in `package.json`
-   - **build number**: defaults to `YYYYMMDDNN`, where `NN` is one more than the highest `NN` already uploaded to App Store Connect today (queried via the App Store Connect API; falls back to `01` if unavailable)
-3. Wait for the two `Build and upload` jobs to finish, then edit the version metadata and submit for review on App Store Connect.
+There are two workflows; both build the iOS and macOS apps and upload them to App Store Connect, then you edit the release notes and submit for review on [App Store Connect](https://appstoreconnect.apple.com):
+
+**Release to App Store** — builds the branch as-is. Merge the upstream release into the branch locally and push first.
+
+**Release to App Store from upstream tag** — also merges for you: give it an upstream tag (e.g. `v10.1.0`) and it merges the tag into the branch you run it on, pushes the merge commit, and continues like the plain workflow. If the merge conflicts, the run fails with instructions to resolve it locally; re-running with an already-merged tag is a safe no-op. Use `ai` as the branch to rehearse a release.
+
+For both workflows the remaining inputs are optional:
+
+- **version**: defaults to the version in `package.json`
+- **build number**: defaults to `YYYYMMDDNN`, where `NN` is one more than the highest `NN` already uploaded to App Store Connect today (queried via the App Store Connect API; falls back to `01` if unavailable)
 
 ## Locale
 
