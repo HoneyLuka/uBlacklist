@@ -47,15 +47,17 @@ jobs:
           permission-pull-requests: write
 
       - name: Exclude README translations not yet merged
-        run: cat .github/crowdin-git-exclude >> .git/info/exclude
+        run: cat .github/crowdin.gitignore >> .git/info/exclude
 
       - name: Run crowdin
         id: crowdin
-        uses: crowdin/github-action@71fdb8814261dd703be4ca7c6450d21b1868da4b # v3.0.1
+        uses: crowdin/github-action@0d5670f539973aea2f01abce61a8989934df0025 # v3.0.2
         with:
           download_translations: true
           export_only_approved: true
           download_translations_args: --ignore-match
+          commit_message: Import translations from Crowdin
+          pull_request_title: Import translations from Crowdin
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CROWDIN_PROJECT_ID: ${{ vars.CROWDIN_PROJECT_ID }}

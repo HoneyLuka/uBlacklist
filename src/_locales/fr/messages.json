@@ -155,6 +155,10 @@
     "message": "Set up",
     "description": "Text for the button to open SERPINFO options."
   },
+  "popup_cannotBlockPage": {
+    "message": "This page cannot be blocked",
+    "description": "Message indicating the current page (e.g. a browser internal page) cannot be blocked."
+  },
   "options_generalTitle": {
     "message": "Général",
     "description": "Title of the General section."
@@ -754,6 +758,18 @@
   "clouds_dropboxSyncTurnedOn": {
     "message": "Synchronisé avec Dropbox",
     "description": "Message indicating Dropbox sync is turned on."
+  },
+  "clouds_oneDriveSync": {
+    "message": "Sync with OneDrive",
+    "description": "Label for the radio button to sync with OneDrive."
+  },
+  "clouds_oneDriveSyncDescription": {
+    "message": "A file will be created within \"/Apps/uBlacklist/\".",
+    "description": "Description for OneDrive sync."
+  },
+  "clouds_oneDriveSyncTurnedOn": {
+    "message": "Synced with OneDrive",
+    "description": "Message indicating OneDrive sync is turned on."
   },
   "clouds_webdavSync": {
     "message": "Sync with WebDAV",
