@@ -1,5 +1,5 @@
 target 'uBlacklist for Safari (iOS)' do
-  platform :ios, '18.0'
+  platform :ios, '16.0'
   use_frameworks!
 
   # Pods for uBlacklist for Safari (iOS)
@@ -17,7 +17,7 @@ target 'uBlacklist for Safari (macOS)' do
 end
 
 target 'uBlacklist for Safari Extension (iOS)' do
-  platform :ios, '18.0'
+  platform :ios, '16.0'
   use_frameworks!
 
   # Pods for uBlacklist for Safari Extension (iOS)
