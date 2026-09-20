@@ -18,7 +18,6 @@ on:
 
 permissions:
   contents: read
-  workflows: write
 
 defaults:
   run:
@@ -44,12 +43,25 @@ jobs:
       contents: write
 
     steps:
+      - name: Check required secrets
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_PAT }}
+        run: |
+          if [ -z "$RELEASE_PAT" ]; then
+            echo "::error::Required secret 'RELEASE_PAT' is not configured. It must be a PAT with 'repo' and 'workflow' scopes: the merge brings upstream changes to .github/workflows, which the default GITHUB_TOKEN is not allowed to push."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
-          # The merge commit is pushed with this step's credential.
+          # The merge commit is pushed with this step's credential. The default
+          # GITHUB_TOKEN is a GitHub App token without the workflows permission,
+          # and GitHub rejects pushes that touch .github/workflows from it, so
+          # authenticate with a workflow-scoped PAT instead.
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Merge
         env:
